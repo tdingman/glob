@@ -44,7 +44,7 @@ function onInstall(e) {
 
 function saveSettings(settings) {
     PropertiesService.getDocumentProperties().setProperties(settings);
-      sendLetterRequest();
+    sendLetterRequest();
 }
 
 function sendLetterRequest() {
@@ -156,7 +156,6 @@ function sendLetterRequest() {
             address_zip: settings.getProperty('toZip'),
             address_country: 'US'
         }
-        
         var options = {
             "method": "post",
             "payload": to_address,
@@ -178,20 +177,32 @@ function sendLetterRequest() {
             "payload": from_address,
             "headers": headers
         };
-        var from_id = JSON.parse(UrlFetchApp.fetch(url, options).getContentText()).id;
-        var postcards = {
-            name: 'My First Postcard',
-            to: to_id,
-            from: from_id,
-            front: 'https://lob.com/postcardfront.pdf',
-            message: "ss"
+        var from_id = JSON.parse(UrlFetchApp.fetch(url, options).getContentText())
+            .id;
+  var this_id = DocumentApp.getActiveDocument().getId();
+        var pdf = DocsList.getFileById(this_id).getAs('application/pdf');
+        var url = "https://api.lob.com/v1/objects";
+        var object1 = {
+            file: pdf,
+            setting_id: 100
         }
         options = {
             "method": "post",
-            "payload": postcards,
+            "payload": object1,
             "headers": headers
         };
-        url = "https://api.lob.com/v1/postcards";
+        var object_id = JSON.parse(UrlFetchApp.fetch(url, options).getContentText()).id;
+        var url = "https://api.lob.com/v1/jobs";
+       var letter = {
+            to: to_id,
+            from: from_id,
+          object1: object_id
+        }
+        options = {
+            "method": "post",
+            "payload": letter,
+            "headers": headers
+        };
         UrlFetchApp.fetch(url, options);
     }
     /**

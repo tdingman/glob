@@ -160,16 +160,16 @@ label {
               return;
           }
           var settings = {
-              "from-name": from.name,
-              "from-address": from.address,
-              "from-city": from.city,
-              "from-state": from.state,
-              "from-zip": from.zip,
-              "to-name": to.name,
-              "to-address": to.address,
-              "to-city": to.city,
-              "to-state": to.state,
-              "to-zip": to.zip
+              "fromName": from.name,
+              "fromAddress": from.address,
+              "fromCity": from.city,
+              "fromState": from.state,
+              "fromZip": from.zip,
+              "toName": to.name,
+              "toAddress": to.address,
+              "toCity": to.city,
+              "toState": to.state,
+              "toZip": to.zip
           }
           google.script.run.withSuccessHandler(function(msg, element) {
               showStatus('Saved settings', $('#button-bar'));
