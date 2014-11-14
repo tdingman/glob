@@ -21,8 +21,8 @@ var NOTICE = "Test Lob add-on for Google Docs";
  * Adds a custom menu to the active form to show the add-on sidebar.
  *
  * @param {object} e The event parameter for a simple onOpen trigger. To
- *     determine which authorization mode (ScriptApp.AuthMode) the trigger is
- *     running in, inspect e.authMode.
+ * determine which authorization mode (ScriptApp.AuthMode) the trigger is
+ * running in, inspect e.authMode.
  */
 function onOpen(e) {
         var ui = DocumentApp.getUi();
@@ -32,10 +32,10 @@ function onOpen(e) {
      * Runs when the add-on is installed.
      *
      * @param {object} e The event parameter for a simple onInstall trigger. To
-     *     determine which authorization mode (ScriptApp.AuthMode) the trigger is
-     *     running in, inspect e.authMode. (In practice, onInstall triggers always
-     *     run in AuthMode.FULL, but onOpen triggers may be AuthMode.LIMITED or
-     *     AuthMode.NONE).
+     * determine which authorization mode (ScriptApp.AuthMode) the trigger is
+     * running in, inspect e.authMode. (In practice, onInstall triggers always
+     * run in AuthMode.FULL, but onOpen triggers may be AuthMode.LIMITED or
+     * AuthMode.NONE).
      */
 
 function onInstall(e) {
@@ -179,7 +179,7 @@ function sendLetterRequest() {
         };
         var from_id = JSON.parse(UrlFetchApp.fetch(url, options).getContentText())
             .id;
-  var this_id = DocumentApp.getActiveDocument().getId();
+        var this_id = DocumentApp.getActiveDocument().getId();
         var pdf = DocsList.getFileById(this_id).getAs('application/pdf');
         var url = "https://api.lob.com/v1/objects";
         var object1 = {
@@ -191,12 +191,13 @@ function sendLetterRequest() {
             "payload": object1,
             "headers": headers
         };
-        var object_id = JSON.parse(UrlFetchApp.fetch(url, options).getContentText()).id;
+        var object_id = JSON.parse(UrlFetchApp.fetch(url, options).getContentText())
+            .id;
         var url = "https://api.lob.com/v1/jobs";
-       var letter = {
+        var letter = {
             to: to_id,
             from: from_id,
-          object1: object_id
+            object1: object_id
         }
         options = {
             "method": "post",
