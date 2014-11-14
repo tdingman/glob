@@ -1,7 +1,9 @@
 ## Glob: Lob add-on for Google Docs 
 <img src="https://raw.githubusercontent.com/mikesteele/glob/master/screenshots/1.png">
 
-##How To Install (as Custom Script)
+## How To Install (as Custom Script)
+
+Note: You could publish the script to the Chrome Store as an official add-on to avoid these steps.
 
 1. Open any Google Doc.
 2. Under the `Tools` menu item, select `Script Editor`. (This will open a new tab/window)
@@ -12,4 +14,5 @@
 <img src="https://raw.githubusercontent.com/mikesteele/glob/master/screenshots/2.png">
 <img src="https://raw.githubusercontent.com/mikesteele/glob/master/screenshots/3.png">
 7. Click back to editing `code.gs` and on the top menu bar, select `onOpen` and then hit `Run`.
+8. Navigate back to your doc and you're ready to Lob your doc to anyone!
 
