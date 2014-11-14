@@ -1,220 +1,288 @@
+/**
+ * @OnlyCurrentDoc
+ *
+ * The above comment directs Apps Script to limit the scope of file
+ * access for this add-on. It specifies that this add-on will only
+ * attempt to read or modify the files in which the add-on is used,
+ * and not all of the user's files. The authorization request message
+ * presented to users will reflect this limited scope.
+ */
+
+/**
+ * A global constant String holding the title of the add-on. This is
+ * used to identify the add-on in the notification emails.
+ */
+var ADDON_TITLE = 'Form Notifications';
+
+/**
+ * A global constant 'notice' text to include with each email
+ * notification.
+ */
+var NOTICE = "Form Notifications was created as an sample add-on, and is meant for \
+demonstration purposes only. It should not be used for complex or important \
+workflows. The number of notifications this add-on produces are limited by the \
+owner's available email quota; it will not send email notifications if the \
+owner's daily email quota has been exceeded. Collaborators using this add-on on \
+the same form will be able to adjust the notification settings, but will not be \
+able to disable the notification triggers set by other collaborators.";
 
 
-<link rel="stylesheet" href="https://ssl.gstatic.com/docs/script/css/add-ons.css">
-<!-- The CSS package above applies Google styling to buttons and other elements. -->
-
-<style>
-.branding-below {
-  bottom: 54px;
-  top: 0;
+ /**
+  * Adds a custom menu to the active form to show the add-on sidebar.
+  *
+  * @param {object} e The event parameter for a simple onOpen trigger. To
+  *     determine which authorization mode (ScriptApp.AuthMode) the trigger is
+  *     running in, inspect e.authMode.
+  */
+function onOpen(e) {
+  FormApp.getUi()
+      .createAddonMenu()
+      .addItem('Configure notifications', 'showSidebar')
+      .addItem('About', 'showAbout')
+      .addToUi();
 }
 
-.branding-text {
-  left: 7px;
-  position: relative;
-  top: 3px;
+/**
+ * Runs when the add-on is installed.
+ *
+ * @param {object} e The event parameter for a simple onInstall trigger. To
+ *     determine which authorization mode (ScriptApp.AuthMode) the trigger is
+ *     running in, inspect e.authMode. (In practice, onInstall triggers always
+ *     run in AuthMode.FULL, but onOpen triggers may be AuthMode.LIMITED or
+ *     AuthMode.NONE).
+ */
+function onInstall(e) {
+  onOpen(e);
 }
 
-.logo {
-  vertical-align: middle;
+/**
+ * Opens a sidebar in the form containing the add-on's user interface for
+ * configuring the notifications this add-on will produce.
+ */
+function showSidebar() {
+  var ui = HtmlService.createHtmlOutputFromFile('Sidebar')
+      .setTitle('Form Notifications');
+  FormApp.getUi().showSidebar(ui);
 }
 
-.width-100 {
-  width: 100%;
-  box-sizing: border-box;
-  -webkit-box-sizing : border-box;‌
-  -moz-box-sizing : border-box;
+/**
+ * Opens a purely-informational dialog in the form explaining details about
+ * this add-on.
+ */
+function showAbout() {
+  var ui = HtmlService.createHtmlOutputFromFile('About')
+      .setWidth(420)
+      .setHeight(270);
+  FormApp.getUi().showModalDialog(ui, 'About Form Notifications');
 }
 
-label {
-  font-weight: bold;
+/**
+ * Save sidebar settings to this form's Properties, and update the onFormSubmit
+ * trigger as needed.
+ *
+ * @param {Object} settings An Object containing key-value
+ *      pairs to store.
+ */
+function saveSettings(settings) {
+  PropertiesService.getDocumentProperties().setProperties(settings);
+  adjustFormSubmitTrigger();
 }
 
-#creator-options,
-#respondent-options {
-  background-color: #eee;
-  border-color: #eee;
-  border-width: 5px;
-  border-style: solid;
-  display: none;
+/**
+ * Queries the User Properties and adds additional data required to populate
+ * the sidebar UI elements.
+ *
+ * @return {Object} A collection of Property values and
+ *     related data used to fill the configuration sidebar.
+ */
+function getSettings() {
+  var settings = PropertiesService.getDocumentProperties().getProperties();
+
+  // Use a default email if the creator email hasn't been provided yet.
+  if (!settings.creatorEmail) {
+    settings.creatorEmail = Session.getEffectiveUser().getEmail();
+  }
+
+  // Get text field items in the form and compile a list
+  //   of their titles and IDs.
+  var form = FormApp.getActiveForm();
+  var textItems = form.getItems(FormApp.ItemType.TEXT);
+  settings.textItems = [];
+  for (var i = 0; i < textItems.length; i++) {
+    settings.textItems.push({
+      title: textItems[i].getTitle(),
+      id: textItems[i].getId()
+    });
+  }
+  return settings;
 }
 
-#creator-email,
-#respondent-email,
-#button-bar {
-  margin-bottom: 10px;
+/**
+ * Adjust the onFormSubmit trigger based on user's requests.
+ */
+function adjustFormSubmitTrigger() {
+  var form = FormApp.getActiveForm();
+  var triggers = ScriptApp.getUserTriggers(form);
+  var settings = PropertiesService.getDocumentProperties();
+  var triggerNeeded =
+      settings.getProperty('creatorNotify') == 'true' ||
+      settings.getProperty('respondentNotify') == 'true';
+
+  // Create a new trigger if required; delete existing trigger
+  //   if it is not needed.
+  var existingTrigger = null;
+  for (var i = 0; i < triggers.length; i++) {
+    if (triggers[i].getEventType() == ScriptApp.EventType.ON_FORM_SUBMIT) {
+      existingTrigger = triggers[i];
+      break;
+    }
+  }
+  if (triggerNeeded && !existingTrigger) {
+    var trigger = ScriptApp.newTrigger('respondToFormSubmit')
+        .forForm(form)
+        .onFormSubmit()
+        .create();
+  } else if (!triggerNeeded && existingTrigger) {
+    ScriptApp.deleteTrigger(existingTrigger);
+  }
 }
 
-#response-step {
-  display: inline;
+/**
+ * Responds to a form submission event if a onFormSubmit trigger has been
+ * enabled.
+ *
+ * @param {Object} e The event parameter created by a form
+ *      submission; see
+ *      https://developers.google.com/apps-script/understanding_events
+ */
+function respondToFormSubmit(e) {
+  var settings = PropertiesService.getDocumentProperties();
+  var authInfo = ScriptApp.getAuthorizationInfo(ScriptApp.AuthMode.FULL);
+
+  // Check if the actions of the trigger require authorizations that have not
+  // been supplied yet -- if so, warn the active user via email (if possible).
+  // This check is required when using triggers with add-ons to maintain
+  // functional triggers.
+  if (authInfo.getAuthorizationStatus() ==
+      ScriptApp.AuthorizationStatus.REQUIRED) {
+    // Re-authorization is required. In this case, the user needs to be alerted
+    // that they need to reauthorize; the normal trigger action is not
+    // conducted, since it authorization needs to be provided first. Send at
+    // most one 'Authorization Required' email a day, to avoid spamming users
+    // of the add-on.
+    sendReauthorizationRequest();
+  } else {
+    // All required authorizations has been granted, so continue to respond to
+    // the trigger event.
+
+    // Check if the form creator needs to be notified; if so, construct and
+    // send the notification.
+    if (settings.getProperty('creatorNotify') == 'true') {
+      sendCreatorNotification();
+    }
+
+    // Check if the form respondent needs to be notified; if so, construct and
+    // send the notification. Be sure to respect the remaining email quota.
+    if (settings.getProperty('respondentNotify') == 'true' &&
+        MailApp.getRemainingDailyQuota() > 0) {
+      sendRespondentNotification(e.response);
+    }
+  }
 }
 
-</style>
 
-<div class="sidebar branding-below">
-  <form>
-    <h3>Send Doc as Letter</h3>
-    <div class="block form-group" id="creator-options">
-        <h3>Lob Settings</h3>
-            <label for="api-key">
-                API Key
-            </label>
-            <input class="width-100" id="api-key">
-         </div>
-            
-
-    <div class="block form-group" id="creator-options">
-      <h3>From</h3>
-      <label for="sender-name">
-        Name
-      </label>
-      <input class="width-100" id="sender-name">
-      <label for="sender-address">
-        Address
-      </label>
-      <input class="width-100" id="sender-address">
-      <label for="sender-city">
-        City
-      </label>
-      <input class="width-100" id="sender-city">
-      <label for="sender-state">
-        State
-      </label>
-      <input class="width-100" id="sender-state">
-      <label for="sender-zip">
-        Zip
-      </label>
-      <input class="width-100" id="sender-zip">
-    </div>
-
-    <div class="block form-group" id="creator-options">
-      <h3>To</h3>
-      <label for="recipient-name">
-        Name
-      </label>
-      <input class="width-100" id="sender-name">
-      <label for="recipient-address">
-        Address
-      </label>
-      <input class="width-100" id="sender-address">
-      <label for="recipient-city">
-        City
-      </label>
-      <input class="width-100" id="recipient-city">
-      <label for="recipient-state">
-        State
-      </label>
-      <input class="width-100" id="recipient-state">
-      <label for="recipient-zip">
-        Zip
-      </label>
-      <input class="width-100" id="recipient-zip">
-    </div>
-
-    <div class="block" id="button-bar">
-      <button class="action" id="send-letter">Send</button>
-    </div>
-  </form>
-</div>
-
-<div class="sidebar bottom">
-  <img alt="Add-on logo" class="logo" width="25"
-      src="https://googledrive.com/host/0B0G1UdyJGrY6XzdjQWF4a1JYY1k/form-notifications-logo-small.png">
-  <span class="gray branding-text">Form Notifications by Google</span>
-</div>
-
-<script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js">
-<script src="https://raw.githubusercontent.com/mikesteele/lob-google-doc/master/lob-browserify.min.js">
-</script>
-<script>
-  /**
-   * On document load, assign required handlers to each element,
-   * and attempt to load any saved settings.
-   */
-  $(function() {
-    $('#send-letter').click(sendLetter);
-  });
-
-
-
-  /**
-   * Collects the options specified in the add-on sidebar and sends them to
-   * be saved as Properties on the server.
-   */
-  function sendLetter() {
-      this.disabled = true;
-      $('#status').remove();
-      if (Lob) {
-          var from = {};
-          from.name = $("#sender-name").val();
-          from.address = $("#sender-address").val();
-          from.city = $("#sender-city").val();
-          from.state = $("#sender-state").val();
-          from.zip = $("#sender-zip").val();
-          var to = {};
-          to.name = $("#sender-name").val();
-          to.address = $("#sender-address").val();
-          to.city = $("#sender-city").val();
-          to.state = $("#sender-state").val();
-          to.zip = $("#sender-zip").val();
-          if (!to.name || !to.address || !to.city || !to.state || !to.zip ||
-              !sender.name || !sender.address || !sender.city || !sender.state ||
-              !sender.zip) {
-              showStatus('All fields must be filled!', $('#button-bar'));
-              this.disabled = false;
-              return;
-          }
-          var object = {};
-          var this_id = DocumentApp.getActiveDocument().getId();
-          object.setting_id = 100;
-          object.file = DocsList.getFileById(this_id).getAs('application/pdf');
-          Lob.jobs.create({
-              to: {
-                  name: to.name,
-                  address_line1: to.address,
-                  address_city: to.city,
-                  address_state: to.state,
-                  address_zip: to.zip,
-                  address_country: 'US',
-              },
-              from: {
-                  name: from.name,
-                  address_line1: from.address,
-                  address_city: from.city,
-                  address_state: from.state,
-                  address_zip: from.zip,
-                  address_country: 'US',
-              },
-              objects: [{
-                  file: object.file,
-                  setting_id: object.setting_id
-              }]
-          }, function(err, res) {
-              showStatus(res, $('#button-bar'));
+/**
+ * Called when the user needs to reauthorize. Sends the user of the
+ * add-on an email explaining the need to reauthorize and provides
+ * a link for the user to do so. Capped to send at most one email
+ * a day to prevent spamming the users of the add-on.
+ */
+function sendReauthorizationRequest() {
+  var settings = PropertiesService.getDocumentProperties();
+  var authInfo = ScriptApp.getAuthorizationInfo(ScriptApp.AuthMode.FULL);
+  var lastAuthEmailDate = settings.getProperty('lastAuthEmailDate');
+  var today = new Date().toDateString();
+  if (lastAuthEmailDate != today) {
+    if (MailApp.getRemainingDailyQuota() > 0) {
+      var template =
+          HtmlService.createTemplateFromFile('AuthorizationEmail');
+      template.url = authInfo.getAuthorizationUrl();
+      template.notice = NOTICE;
+      var message = template.evaluate();
+      MailApp.sendEmail(Session.getEffectiveUser().getEmail(),
+          'Authorization Required',
+          message.getContent(), {
+            name: ADDON_TITLE,
+            htmlBody: message.getContent()
           });
-      } else {
-          var api_key = $("#sender-name").val();
-          if (api_key) {
-              var Lob = new lobFactory(api_key);
-          } else {
-              showStatus('All fields must be filled!', $('#button-bar'));
-              return;
-          }
-      }
+    }
+    settings.setProperty('lastAuthEmailDate', today);
   }
-  /**
-   * Inserts a div that contains an status message after a given element.
-   *
-   * @param {String} msg The status message to display.
-   * @param {Object} element The element after which to display the Status.
-   */
-  function showStatus(msg, element) {
-     var div = $('<div>')
-         .attr('id', 'status')
-         .attr('class','error')
-         .text(msg);
-    $(element).after(div);
-  }
-</script>
+}
 
+/**
+ * Sends out creator notification email(s) if the current number
+ * of form responses is an even multiple of the response step
+ * setting.
+ */
+function sendCreatorNotification() {
+  var form = FormApp.getActiveForm();
+  var settings = PropertiesService.getDocumentProperties();
+  var responseStep = settings.getProperty('responseStep');
+  responseStep = responseStep ? parseInt(responseStep) : 10;
+
+  // If the total number of form responses is an even multiple of the
+  // response step setting, send a notification email(s) to the form
+  // creator(s). For example, if the response step is 10, notifications
+  // will be sent when there are 10, 20, 30, etc. total form responses
+  // received.
+  if (form.getResponses().length % responseStep == 0) {
+    var addresses = settings.getProperty('creatorEmail').split(',');
+    if (MailApp.getRemainingDailyQuota() > addresses.length) {
+      var template =
+          HtmlService.createTemplateFromFile('CreatorNotification');
+      template.summary = form.getSummaryUrl();
+      template.responses = form.getResponses().length;
+      template.title = form.getTitle();
+      template.responseStep = responseStep;
+      template.formUrl = form.getEditUrl();
+      template.notice = NOTICE;
+      var message = template.evaluate();
+      MailApp.sendEmail(settings.getProperty('creatorEmail'),
+          form.getTitle() + ': Form submissions detected',
+          message.getContent(), {
+            name: ADDON_TITLE,
+            htmlBody: message.getContent()
+          });
+    }
+  }
+}
+
+/**
+ * Sends out respondent notificiation emails.
+ *
+ * @param {FormResponse} response FormResponse object of the event
+ *      that triggered this notification
+ */
+function sendRespondentNotification(response, aboutText) {
+  var form = FormApp.getActiveForm();
+  var settings = PropertiesService.getDocumentProperties();
+  var emailId = settings.getProperty('respondentEmailItemId');
+  var emailItem = form.getItemById(parseInt(emailId));
+  var respondentEmail = response.getResponseForItem(emailItem)
+      .getResponse();
+  if (respondentEmail) {
+    var template =
+        HtmlService.createTemplateFromFile('RespondentNotification');
+    template.paragraphs = settings.getProperty('responseText').split('\n');
+    template.notice = NOTICE;
+    var message = template.evaluate();
+    MailApp.sendEmail(respondentEmail,
+        'Thank you for filling out form ' + form.getTitle() + '!',
+        message.getContent(), {
+          name: form.getTitle(),
+            htmlBody: message.getContent()
+        });
+  }
+}
 
