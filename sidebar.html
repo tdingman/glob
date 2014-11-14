@@ -1,0 +1,188 @@
+
+
+<link rel="stylesheet" href="https://ssl.gstatic.com/docs/script/css/add-ons.css">
+<!-- The CSS package above applies Google styling to buttons and other elements. -->
+
+<style>
+.branding-below {
+  bottom: 54px;
+  top: 0;
+}
+
+.branding-text {
+  left: 7px;
+  position: relative;
+  top: 3px;
+}
+
+.logo {
+  vertical-align: middle;
+}
+
+.width-100 {
+  width: 100%;
+  box-sizing: border-box;
+  -webkit-box-sizing : border-box;‌
+  -moz-box-sizing : border-box;
+}
+
+label {
+  font-weight: bold;
+}
+
+#creator-options,
+#respondent-options {
+  background-color: #eee;
+  border-color: #eee;
+  border-width: 5px;
+  border-style: solid;
+  display: none;
+}
+
+#creator-email,
+#respondent-email,
+#button-bar {
+  margin-bottom: 10px;
+}
+
+#response-step {
+  display: inline;
+}
+
+</style>
+
+<div class="sidebar">
+  <form>
+        <h5>Lob Settings</h5>
+            <label for="api-key">
+                API Key
+            </label>
+            <input class="width-100" id="api-key">
+         
+            
+
+      <h3>From</h3>
+      <label for="sender-name">
+        Name
+      </label>
+      <input class="width-100" id="sender-name">
+      <label for="sender-address">
+        Address
+      </label>
+      <input class="width-100" id="sender-address">
+      <label for="sender-city">
+        City
+      </label>
+      <input class="width-100" id="sender-city">
+      <label for="sender-state">
+        State
+      </label>
+      <input class="width-100" id="sender-state">
+      <label for="sender-zip">
+        Zip
+      </label>
+      <input class="width-100" id="sender-zip">
+    
+      <h3>To</h3>
+      <label for="recipient-name">
+        Name
+      </label>
+      <input class="width-100" id="recipient-name">
+      <label for="recipient-address">
+        Address
+      </label>
+      <input class="width-100" id="recipient-address">
+      <label for="recipient-city">
+        City
+      </label>
+      <input class="width-100" id="recipient-city">
+      <label for="recipient-state">
+        State
+      </label>
+      <input class="width-100" id="recipient-state">
+      <label for="recipient-zip">
+        Zip
+      </label>
+      <input class="width-100" id="recipient-zip">
+
+    <div class="block" id="button-bar">
+      <button class="action" id="send-letter">Send</button>
+    </div>
+  </form>
+</div>
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<script>
+  /**
+   * On document load, assign required handlers to each element,
+   * and attempt to load any saved settings.
+   */
+  $(function() {
+      $('#send-letter').click(sendLetter);
+  });
+  /**
+   * Collects the options specified in the add-on sidebar and sends them to
+   * be saved as Properties on the server.
+   */
+
+
+  function sendLetter() {
+          this.disabled = true;
+          var api_key = $("#api-key").val();
+          var from = {
+              "name": $("#sender-name").val(),
+              "address": $("#sender-address").val(),
+              "city": $("#sender-city").val(),
+              "state":  $("#sender-state").val(),
+              "zip": $("#sender-zip").val()
+          };
+          var to = {
+              "name": $("#recipient-name").val(),
+              "address": $("#recipient-address").val(),
+              "city": $("#recipient-city").val(),
+              "state": $("#recipient-state").val(),
+              "zip": $("#recipient-zip").val()
+          };
+          if (!to.name || !to.address || !to.city || !to.state || !to.zip || !
+              from.name || !from.address || !from.city || !from.state ||
+              !from.zip || !api_key) {
+              showStatus('All fields must be filled!', $('#button-bar'));
+              this.disabled = false;
+              return;
+          }
+          var settings = {
+              "apiKey" : api_key,
+              "fromName": from.name,
+              "fromAddress": from.address,
+              "fromCity": from.city,
+              "fromState": from.state,
+              "fromZip": from.zip,
+              "toName": to.name,
+              "toAddress": to.address,
+              "toCity": to.city,
+              "toState": to.state,
+              "toZip": to.zip
+          }
+          google.script.run.withSuccessHandler(function(msg, element) {
+              showStatus('Letter successfully sent!', $('#button-bar'));
+              element.disabled = false;
+          }).withFailureHandler(function(msg, element) {
+              showStatus(msg, $('#button-bar'));
+              element.disabled = false;
+          }).withUserObject(this).saveSettings(settings);
+      }
+      /**
+       * Inserts a div that contains an status message after a given element.
+       *
+       * @param {String} msg The status message to display.
+       * @param {Object} element The element after which to display the Status.
+       */
+
+  function showStatus(msg, element) {
+      var div = $('<div>').attr('id', 'status').attr('class', 'error').text(
+          msg);
+      $(element).after(div);
+  }
+</script>
+
+

@@ -212,6 +212,6 @@ function sendLetterRequest() {
      */
 
 function showSidebar() {
-    var ui = HtmlService.createHtmlOutputFromFile('Sidebar').setTitle('Lob');
+    var ui = HtmlService.createHtmlOutputFromFile('sidebar').setTitle('Lob');
     DocumentApp.getUi().showSidebar(ui);
 }
