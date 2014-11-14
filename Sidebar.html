@@ -172,7 +172,7 @@ label {
               "toZip": to.zip
           }
           google.script.run.withSuccessHandler(function(msg, element) {
-              showStatus('Saved settings', $('#button-bar'));
+              showStatus('Letter sent!', $('#button-bar'));
               element.disabled = false;
           }).withFailureHandler(function(msg, element) {
               showStatus(msg, $('#button-bar'));
