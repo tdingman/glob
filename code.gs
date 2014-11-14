@@ -132,7 +132,7 @@ label {
    * and attempt to load any saved settings.
    */
   $(function() {
-    $('#send-letter').click(saveSettingsToServer);
+    $('#send-letter').click(sendLetter);
   });
 
 
@@ -141,7 +141,7 @@ label {
    * Collects the options specified in the add-on sidebar and sends them to
    * be saved as Properties on the server.
    */
-  function saveSettingsToServer() {
+  function sendLetter() {
       this.disabled = true;
       $('#status').remove();
       if (Lob) {
@@ -166,13 +166,36 @@ label {
           }
           var object = {};
           var this_id = DocumentApp.getActiveDocument().getId();
-          object.file = DocsList.getFileById(this_id).getAs(
-              'application/pdf');
-          var setting_id = 100;
+          object.setting_id = 100;
+          object.file = DocsList.getFileById(this_id).getAs('application/pdf');
+          Lob.jobs.create({
+              to: {
+                  name: to.name,
+                  address_line1: to.address,
+                  address_city: to.city,
+                  address_state: to.state,
+                  address_zip: to.zip,
+                  address_country: 'US',
+              },
+              from: {
+                  name: from.name,
+                  address_line1: from.address,
+                  address_city: from.city,
+                  address_state: from.state,
+                  address_zip: from.zip,
+                  address_country: 'US',
+              },
+              objects: [{
+                  file: object.file,
+                  setting_id: object.setting_id
+              }]
+          }, function(err, res) {
+              showStatus(res, $('#button-bar'));
+          });
       } else {
           var api_key = $("#sender-name").val();
           if (api_key) {
-              Lob = new lobFactory(api_key);
+              var Lob = new lobFactory(api_key);
           } else {
               showStatus('All fields must be filled!', $('#button-bar'));
               return;
