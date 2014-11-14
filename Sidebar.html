@@ -51,19 +51,16 @@ label {
 
 </style>
 
-<div class="sidebar branding-below">
+<div class="sidebar">
   <form>
-    <h3>Send Doc as Letter</h3>
-    <div class="block form-group" id="creator-options">
-        <h3>Lob Settings</h3>
+        <h5>Lob Settings</h5>
             <label for="api-key">
                 API Key
             </label>
             <input class="width-100" id="api-key">
-         </div>
+         
             
 
-    <div class="block form-group" id="creator-options">
       <h3>From</h3>
       <label for="sender-name">
         Name
@@ -85,9 +82,7 @@ label {
         Zip
       </label>
       <input class="width-100" id="sender-zip">
-    </div>
-
-    <div class="block form-group" id="creator-options">
+    
       <h3>To</h3>
       <label for="recipient-name">
         Name
@@ -109,7 +104,6 @@ label {
         Zip
       </label>
       <input class="width-100" id="recipient-zip">
-    </div>
 
     <div class="block" id="button-bar">
       <button class="action" id="send-letter">Send</button>
@@ -117,103 +111,85 @@ label {
   </form>
 </div>
 
-<div class="sidebar bottom">
-  <img alt="Add-on logo" class="logo" width="25"
-      src="https://googledrive.com/host/0B0G1UdyJGrY6XzdjQWF4a1JYY1k/form-notifications-logo-small.png">
-  <span class="gray branding-text">Form Notifications by Google</span>
-</div>
-
-<script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js">
-<script src="https://raw.githubusercontent.com/mikesteele/lob-google-doc/master/lob-browserify.js">
-</script>
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
 <script>
   /**
    * On document load, assign required handlers to each element,
    * and attempt to load any saved settings.
    */
   $(function() {
-    $('#send-letter').click(sendLetter);
+      $('#send-letter').click(sendLetter);
   });
-
-
-
   /**
    * Collects the options specified in the add-on sidebar and sends them to
    * be saved as Properties on the server.
    */
+
+
   function sendLetter() {
-      this.disabled = true;
-      $('#status').remove();
-      if (Lob) {
-          var from = {};
+          this.disabled = true;
+          var from = {
+              "name": null,
+              "address": null,
+              "city": null,
+              "state": null,
+              "zip": null
+          };
           from.name = $("#sender-name").val();
           from.address = $("#sender-address").val();
           from.city = $("#sender-city").val();
           from.state = $("#sender-state").val();
           from.zip = $("#sender-zip").val();
-          var to = {};
+          var to = {
+              "name": null,
+              "address": null,
+              "city": null,
+              "state": null,
+              "zip": null
+          };
           to.name = $("#sender-name").val();
           to.address = $("#sender-address").val();
           to.city = $("#sender-city").val();
           to.state = $("#sender-state").val();
           to.zip = $("#sender-zip").val();
-          if (!to.name || !to.address || !to.city || !to.state || !to.zip ||
-              !sender.name || !sender.address || !sender.city || !sender.state ||
-              !sender.zip) {
+          if (!to.name || !to.address || !to.city || !to.state || !to.zip || !
+              from.name || !from.address || !from.city || !from.state ||
+              !from.zip) {
               showStatus('All fields must be filled!', $('#button-bar'));
               this.disabled = false;
               return;
           }
-          var object = {};
-          var this_id = DocumentApp.getActiveDocument().getId();
-          object.setting_id = 100;
-          object.file = DocsList.getFileById(this_id).getAs('application/pdf');
-          Lob.jobs.create({
-              to: {
-                  name: to.name,
-                  address_line1: to.address,
-                  address_city: to.city,
-                  address_state: to.state,
-                  address_zip: to.zip,
-                  address_country: 'US',
-              },
-              from: {
-                  name: from.name,
-                  address_line1: from.address,
-                  address_city: from.city,
-                  address_state: from.state,
-                  address_zip: from.zip,
-                  address_country: 'US',
-              },
-              objects: [{
-                  file: object.file,
-                  setting_id: object.setting_id
-              }]
-          }, function(err, res) {
-              showStatus(res, $('#button-bar'));
-          });
-      } else {
-          var api_key = $("#sender-name").val();
-          if (api_key) {
-              var Lob = new lobFactory(api_key);
-          } else {
-              showStatus('All fields must be filled!', $('#button-bar'));
-              return;
+          var settings = {
+              "from-name": from.name,
+              "from-address": from.address,
+              "from-city": from.city,
+              "from-state": from.state,
+              "from-zip": from.zip,
+              "to-name": to.name,
+              "to-address": to.address,
+              "to-city": to.city,
+              "to-state": to.state,
+              "to-zip": to.zip
           }
+          google.script.run.withSuccessHandler(function(msg, element) {
+              showStatus('Saved settings', $('#button-bar'));
+              element.disabled = false;
+          }).withFailureHandler(function(msg, element) {
+              showStatus(msg, $('#button-bar'));
+              element.disabled = false;
+          }).withUserObject(this).saveSettings(settings);
       }
-  }
-  /**
-   * Inserts a div that contains an status message after a given element.
-   *
-   * @param {String} msg The status message to display.
-   * @param {Object} element The element after which to display the Status.
-   */
+      /**
+       * Inserts a div that contains an status message after a given element.
+       *
+       * @param {String} msg The status message to display.
+       * @param {Object} element The element after which to display the Status.
+       */
+
   function showStatus(msg, element) {
-     var div = $('<div>')
-         .attr('id', 'status')
-         .attr('class','error')
-         .text(msg);
-    $(element).after(div);
+      var div = $('<div>').attr('id', 'status').attr('class', 'error').text(
+          msg);
+      $(element).after(div);
   }
 </script>
 

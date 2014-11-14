@@ -43,59 +43,12 @@ function onInstall(e) {
 }
 
 function saveSettings(settings) {
+    sendLetterRequest();
     PropertiesService.getDocumentProperties().setProperties(settings);
-    adjustFormSubmitTrigger();
-}
-
-function adjustFormSubmitTrigger() {
-    var form = DocumentApp.getActiveForm();
-    var triggers = ScriptApp.getUserTriggers(form);
-    var settings = PropertiesService.getDocumentProperties();
-    // Create a new trigger if required; delete existing trigger
-    //   if it is not needed.
-    var existingTrigger = null;
-    for (var i = 0; i < triggers.length; i++) {
-        if (triggers[i].getEventType() == ScriptApp.EventType.ON_FORM_SUBMIT) {
-            existingTrigger = triggers[i];
-            break;
-        }
-    }
-    if (!existingTrigger) {
-        var trigger = ScriptApp.newTrigger('respondToFormSubmit').forForm(
-            form).onFormSubmit().create();
-    }
-}
-
-function respondToFormSubmit(e) {
-    var settings = PropertiesService.getDocumentProperties();
-    var authInfo = ScriptApp.getAuthorizationInfo(ScriptApp.AuthMode.FULL);
-    // Check if the actions of the trigger require authorizations that have not
-    // been supplied yet -- if so, warn the active user via email (if possible).
-    // This check is required when using triggers with add-ons to maintain
-    // functional triggers.
-    if (authInfo.getAuthorizationStatus() == ScriptApp.AuthorizationStatus.REQUIRED) {
-        // Re-authorization is required. In this case, the user needs to be alerted
-        // that they need to reauthorize; the normal trigger action is not
-        // conducted, since it authorization needs to be provided first. Send at
-        // most one 'Authorization Required' email a day, to avoid spamming users
-        // of the add-on.
-        sendReauthorizationRequest();
-    } else {
-        // All required authorizations has been granted, so continue to respond to
-        // the trigger event.
-        // Check if the form creator needs to be notified; if so, construct and
-        // send the notification.
-        sendLetterRequest();
-        // Check if the form respondent needs to be notified; if so, construct and
-        // send the notification. Be sure to respect the remaining email quota.
-        if (settings.getProperty('respondentNotify') == 'true' && MailApp.getRemainingDailyQuota() >
-            0) {
-            sendRespondentNotification(e.response);
-        }
-    }
 }
 
 function sendLetterRequest() {
+        var settings = PropertiesService.getDocumentProperties();
         var lob_api_key = 'test_194071209b8ee82a6d5cdcdcd895f353d19:';
         var Base64 = {
             _keyStr: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=",
@@ -196,12 +149,12 @@ function sendLetterRequest() {
             'Authorization': 'Basic ' + auth
         }
         var to_address = {
-                name: 'noah-to',
-                address_line1: '7 Sandra Rd',
-                address_city: 'Peabody',
-                address_state: 'MA',
-                address_zip: '01960',
-                address_country: 'US'
+            name: "Mike Steele",
+            address_line1: "7 Sandra Rd",
+            address_city: "Peabody",
+            address_state: "MA",
+            address_zip: "01960",
+            address_country: 'US'
         }
         var options = {
             "method": "post",
@@ -209,21 +162,23 @@ function sendLetterRequest() {
             "headers": headers
         };
         var url = "https://api.lob.com/v1/addresses";
-        var to_id = JSON.parse(UrlFetchApp.fetch(url, options).getContentText()).id;
+        var to_id = JSON.parse(UrlFetchApp.fetch(url, options).getContentText())
+            .id;
         var from_address = {
-                name: 'noah-from',
-                address_line1: '7 Sandra Rd',
-                address_city: 'Peabody',
-                address_state: 'MA',
-                address_zip: '01960',
-                address_country: 'US'
+            name: settings.getProperty('from-name'),
+            address_line1: settings.getProperty('from-address'),
+            address_city: settings.getProperty('from-city'),
+            address_state: settings.getProperty('from-state'),
+            address_zip: settings.getProperty('from-zip'),
+            address_country: 'US'
         }
         options = {
             "method": "post",
             "payload": from_address,
             "headers": headers
         };
-        var from_id = JSON.parse(UrlFetchApp.fetch(url, options).getContentText()).id;
+        var from_id = JSON.parse(UrlFetchApp.fetch(url, options).getContentText())
+            .id;
         var postcards = {
             name: 'My First Postcard',
             to: to_id,
@@ -237,7 +192,7 @@ function sendLetterRequest() {
             "headers": headers
         };
         url = "https://api.lob.com/v1/postcards";
-        UrlFetchApp.fetch(url, options); 
+        UrlFetchApp.fetch(url, options);
     }
     /**
      * Opens a sidebar in the form containing the add-on's user interface for
