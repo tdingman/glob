@@ -127,6 +127,7 @@ label {
 
 
   function sendLetter() {
+          $("#status").remove();
           this.disabled = true;
           var api_key = $("#api-key").val();
           var from = {
