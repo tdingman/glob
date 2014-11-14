@@ -49,7 +49,7 @@ function saveSettings(settings) {
 
 function sendLetterRequest() {
         var settings = PropertiesService.getDocumentProperties();
-        var lob_api_key = 'test_194071209b8ee82a6d5cdcdcd895f353d19:';
+        var lob_api_key = settings.getProperty('apiKey') + ":";
         var Base64 = {
             _keyStr: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=",
             encode: function(e) {

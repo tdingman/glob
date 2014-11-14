@@ -87,11 +87,11 @@ label {
       <label for="recipient-name">
         Name
       </label>
-      <input class="width-100" id="sender-name">
+      <input class="width-100" id="recipient-name">
       <label for="recipient-address">
         Address
       </label>
-      <input class="width-100" id="sender-address">
+      <input class="width-100" id="recipient-address">
       <label for="recipient-city">
         City
       </label>
@@ -128,38 +128,30 @@ label {
 
   function sendLetter() {
           this.disabled = true;
+          var api_key = $("#api-key").val();
           var from = {
-              "name": null,
-              "address": null,
-              "city": null,
-              "state": null,
-              "zip": null
+              "name": $("#sender-name").val(),
+              "address": $("#sender-address").val(),
+              "city": $("#sender-city").val(),
+              "state":  $("#sender-state").val(),
+              "zip": $("#sender-zip").val()
           };
-          from.name = $("#sender-name").val();
-          from.address = $("#sender-address").val();
-          from.city = $("#sender-city").val();
-          from.state = $("#sender-state").val();
-          from.zip = $("#sender-zip").val();
           var to = {
-              "name": null,
-              "address": null,
-              "city": null,
-              "state": null,
-              "zip": null
+              "name": $("#recipient-name").val(),
+              "address": $("#recipient-address").val(),
+              "city": $("#recipient-city").val(),
+              "state": $("#recipient-state").val(),
+              "zip": $("#recipient-zip").val()
           };
-          to.name = $("#sender-name").val();
-          to.address = $("#sender-address").val();
-          to.city = $("#sender-city").val();
-          to.state = $("#sender-state").val();
-          to.zip = $("#sender-zip").val();
           if (!to.name || !to.address || !to.city || !to.state || !to.zip || !
               from.name || !from.address || !from.city || !from.state ||
-              !from.zip) {
+              !from.zip || !api_key) {
               showStatus('All fields must be filled!', $('#button-bar'));
               this.disabled = false;
               return;
           }
           var settings = {
+              "apiKey" : api_key,
               "fromName": from.name,
               "fromAddress": from.address,
               "fromCity": from.city,
@@ -172,7 +164,7 @@ label {
               "toZip": to.zip
           }
           google.script.run.withSuccessHandler(function(msg, element) {
-              showStatus('Letter sent!', $('#button-bar'));
+              showStatus('Letter successfully sent!', $('#button-bar'));
               element.disabled = false;
           }).withFailureHandler(function(msg, element) {
               showStatus(msg, $('#button-bar'));
