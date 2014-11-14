@@ -43,8 +43,8 @@ function onInstall(e) {
 }
 
 function saveSettings(settings) {
-    sendLetterRequest();
     PropertiesService.getDocumentProperties().setProperties(settings);
+      sendLetterRequest();
 }
 
 function sendLetterRequest() {
@@ -149,13 +149,14 @@ function sendLetterRequest() {
             'Authorization': 'Basic ' + auth
         }
         var to_address = {
-            name: "Mike Steele",
-            address_line1: "7 Sandra Rd",
-            address_city: "Peabody",
-            address_state: "MA",
-            address_zip: "01960",
+            name: settings.getProperty('toName'),
+            address_line1: settings.getProperty('toAddress'),
+            address_city: settings.getProperty('toCity'),
+            address_state: settings.getProperty('toState'),
+            address_zip: settings.getProperty('toZip'),
             address_country: 'US'
         }
+        
         var options = {
             "method": "post",
             "payload": to_address,
@@ -165,11 +166,11 @@ function sendLetterRequest() {
         var to_id = JSON.parse(UrlFetchApp.fetch(url, options).getContentText())
             .id;
         var from_address = {
-            name: settings.getProperty('from-name'),
-            address_line1: settings.getProperty('from-address'),
-            address_city: settings.getProperty('from-city'),
-            address_state: settings.getProperty('from-state'),
-            address_zip: settings.getProperty('from-zip'),
+            name: settings.getProperty('fromName'),
+            address_line1: settings.getProperty('fromAddress'),
+            address_city: settings.getProperty('fromCity'),
+            address_state: settings.getProperty('fromState'),
+            address_zip: settings.getProperty('fromZip'),
             address_country: 'US'
         }
         options = {
@@ -177,8 +178,7 @@ function sendLetterRequest() {
             "payload": from_address,
             "headers": headers
         };
-        var from_id = JSON.parse(UrlFetchApp.fetch(url, options).getContentText())
-            .id;
+        var from_id = JSON.parse(UrlFetchApp.fetch(url, options).getContentText()).id;
         var postcards = {
             name: 'My First Postcard',
             to: to_id,
