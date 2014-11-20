@@ -1,4 +1,4 @@
-/**
+/*
  * @OnlyCurrentDoc
  *
  * The above comment directs Apps Script to limit the scope of file
