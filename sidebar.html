@@ -4,13 +4,13 @@
 <style>
 
 h3 {
-  padding:0;
-  margin:10px 0
+  padding:10px 0;
+  display: table-cell;
 }
 
 .branding-below {
   bottom:54px;
-  top:0
+  top:0;
 }
 
 .branding-text {
@@ -31,7 +31,8 @@ h3 {
 }
 
 label {
-  font-weight:700
+  font-weight:700;
+  padding-right: 10px;
 }
 
 #creator-options,#respondent-options {
@@ -92,12 +93,14 @@ input {
     <p><label for="recipient-address">Address</label> <input class="width-100" id="recipient-address" style="width: 200px"></p>
 
     <p><label for="recipient-city">City</label> <input class="width-100" id="recipient-city" style="width: 200px"></p>
-
+ 
     <p><label for="recipient-state">State</label> <input class="width-100" id="recipient-state" style="width: 30px"></p>
 
-    <p><label for="recipient-zip">Zip</label> <input class="width-100" id="recipient-zip" style="width: 60px"></p><br>
+    <p><label for="recipient-zip">Zip</label> <input class="width-100" id="recipient-zip" style="width: 60px"></p>
+      </form>
+    <p><h3>Estimated Price: <span id="estimate_btn"><a>Calculate</a></span><br></p>
     <button class="action" id="send-letter">Send</button>
-  </form>
+
 
   <div class="block" id="button-bar"></div>
 </div><script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script> <script>
@@ -106,71 +109,84 @@ input {
    * and attempt to load any saved settings.
    */
   $(function() {
-      $('#send-letter').click(sendLetter);
+    $('#send-letter').click(sendLetter);
+    $('#estimate_btn').click(estimateCost);
   });
   /**
    * Collects the options specified in the add-on sidebar and sends them to
    * be saved as Properties on the server.
    */
-
-
   function sendLetter() {
-          $("#status").remove();
-          this.disabled = true;
-          var api_key = $("#api-key").val();
-          var from = {
-              "name": $("#sender-name").val(),
-              "address": $("#sender-address").val(),
-              "city": $("#sender-city").val(),
-              "state":  $("#sender-state").val(),
-              "zip": $("#sender-zip").val()
-          };
-          var to = {
-              "name": $("#recipient-name").val(),
-              "address": $("#recipient-address").val(),
-              "city": $("#recipient-city").val(),
-              "state": $("#recipient-state").val(),
-              "zip": $("#recipient-zip").val()
-          };
-          if (!to.name || !to.address || !to.city || !to.state || !to.zip || !
-              from.name || !from.address || !from.city || !from.state ||
-              !from.zip || !api_key) {
-              showStatus('All fields must be filled!', $('#button-bar'));
-              this.disabled = false;
-              return;
-          }
-          var settings = {
-              "apiKey" : api_key,
-              "fromName": from.name,
-              "fromAddress": from.address,
-              "fromCity": from.city,
-              "fromState": from.state,
-              "fromZip": from.zip,
-              "toName": to.name,
-              "toAddress": to.address,
-              "toCity": to.city,
-              "toState": to.state,
-              "toZip": to.zip
-          }
-          google.script.run.withSuccessHandler(function(msg, element) {
-              showStatus('Letter successfully sent!', $('#button-bar'));
-              element.disabled = false;
-          }).withFailureHandler(function(msg, element) {
-              showStatus(msg, $('#button-bar'));
-              element.disabled = false;
-          }).withUserObject(this).saveSettings(settings);
+      $("#status").remove();
+      this.disabled = true;
+      var api_key = $("#api-key").val().trim();
+      var from = {
+        "name": $("#sender-name").val(),
+        "address": $("#sender-address").val(),
+        "city": $("#sender-city").val(),
+        "state": $("#sender-state").val(),
+        "zip": $("#sender-zip").val()
+      };
+      var to = {
+        "name": $("#recipient-name").val(),
+        "address": $("#recipient-address").val(),
+        "city": $("#recipient-city").val(),
+        "state": $("#recipient-state").val(),
+        "zip": $("#recipient-zip").val()
+      };
+      if (!to.name || !to.address || !to.city || !to.state || !to.zip || !from.name || !from.address || !from.city || !from.state || !from.zip || !api_key) {
+        showStatus('All fields must be filled!', $('#button-bar'));
+        this.disabled = false;
+        return;
       }
-      /**
-       * Inserts a div that contains an status message after a given element.
-       *
-       * @param {String} msg The status message to display.
-       * @param {Object} element The element after which to display the Status.
-       */
+      var settings = {
+        "apiKey": api_key,
+        "fromName": from.name,
+        "fromAddress": from.address,
+        "fromCity": from.city,
+        "fromState": from.state,
+        "fromZip": from.zip,
+        "toName": to.name,
+        "toAddress": to.address,
+        "toCity": to.city,
+        "toState": to.state,
+        "toZip": to.zip
+      }
+      google.script.run.withSuccessHandler(function(msg, element) {
+        showStatus('Letter successfully sent!', $('#button-bar'));
+        element.disabled = false;
+      }).withFailureHandler(function(msg, element) {
+        showStatus(msg, $('#button-bar'));
+        element.disabled = false;
+      }).withUserObject(this).saveSettings(settings);
+    }
+    /**
+     * Inserts a div that contains an status message after a given element.
+     *
+     * @param {String} msg The status message to display.
+     * @param {Object} element The element after which to display the Status.
+     */
+
+  function estimateCost() {
+    $("#estimate_btn").html("Calculating...");
+    google.script.run.withSuccessHandler(function(msg, element) {
+      setCost(msg);
+      element.disabled = false;
+    }).withFailureHandler(function(msg, element) {
+      showStatus(msg, $('#button-bar'));
+      element.disabled = false;
+    }).withUserObject(this).getNumberOfPages();
+  }
+
+  function setCost(pages) {
+    //Linear regression estimate of pages versus job price
+    var estimated_price = 0.20859580519019 + 0.40689477426235 * pages;
+    $("#estimate_btn").html("$" + estimated_price.toFixed(2));
+  }
 
   function showStatus(msg, element) {
-      var div = $('<div>').attr('id', 'status').attr('class', 'error').text(
-          msg);
-      $(element).after(div);
+    var div = $('<div>').attr('id', 'status').attr('class', 'error').text(msg);
+    $(element).after(div);
   }
 </script>
 
