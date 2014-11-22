@@ -7,7 +7,7 @@
 
 Note: You could publish the script as an official add-on to avoid these steps.
 
-For more information on publishing a Docs add-on, see (<a href="https://developers.google.com/apps-script/add-ons/publish">this article</a>.
+For more information on publishing a Docs add-on, see <a href="https://developers.google.com/apps-script/add-ons/publish">this article</a>.
 
 1. Open any Google Doc.
 2. Under the `Tools` menu item, select `Script Editor`. (This will open a new tab/window)
