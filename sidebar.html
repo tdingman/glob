@@ -96,7 +96,7 @@ input {
 
             <p><label for="sender-city">City</label> <input class="width-100" id="sender-city" style="width: 180px"><br></p>
 
-            <p><label for="sender-state">State</label> <input class="width-100" id="sender-state" style="width: 180px"></p>
+            <p><label for="sender-state">State</label> <input class="width-100" id="sender-state" style="width: 30px"></p>
 
             <p><label for="sender-zip">Zip</label> <input class="width-100" id="sender-zip" style="width: 60px"></p>
 
@@ -114,7 +114,7 @@ input {
 
             <p><label for="recipient-city">City</label> <input class="width-100" id="recipient-city" style="width: 180px"></p>
 
-            <p><label for="recipient-state">State</label> <input class="width-100" id="recipient-state" style="width: 180px"></p>
+            <p><label for="recipient-state">State</label> <input class="width-100" id="recipient-state" style="width: 30px"></p>
 
             <p><label for="recipient-zip">Zip</label> <input class="width-100" id="recipient-zip" style="width: 60px"></p>
         </form>
@@ -208,6 +208,45 @@ function estimateCost() {
     }).withUserObject(this).getNumberOfPages();
 }
 
+
+//helper function to assist in converting stored state names to abbreviations
+function convert_state(name, to) {
+    var name = name.toUpperCase();
+    var states = new Array(                         {'name':'Alabama', 'abbrev':'AL'},          {'name':'Alaska', 'abbrev':'AK'},
+        {'name':'Arizona', 'abbrev':'AZ'},          {'name':'Arkansas', 'abbrev':'AR'},         {'name':'California', 'abbrev':'CA'},
+        {'name':'Colorado', 'abbrev':'CO'},         {'name':'Connecticut', 'abbrev':'CT'},      {'name':'Delaware', 'abbrev':'DE'},
+        {'name':'Florida', 'abbrev':'FL'},          {'name':'Georgia', 'abbrev':'GA'},          {'name':'Hawaii', 'abbrev':'HI'},
+        {'name':'Idaho', 'abbrev':'ID'},            {'name':'Illinois', 'abbrev':'IL'},         {'name':'Indiana', 'abbrev':'IN'},
+        {'name':'Iowa', 'abbrev':'IA'},             {'name':'Kansas', 'abbrev':'KS'},           {'name':'Kentucky', 'abbrev':'KY'},
+        {'name':'Louisiana', 'abbrev':'LA'},        {'name':'Maine', 'abbrev':'ME'},            {'name':'Maryland', 'abbrev':'MD'},
+        {'name':'Massachusetts', 'abbrev':'MA'},    {'name':'Michigan', 'abbrev':'MI'},         {'name':'Minnesota', 'abbrev':'MN'},
+        {'name':'Mississippi', 'abbrev':'MS'},      {'name':'Missouri', 'abbrev':'MO'},         {'name':'Montana', 'abbrev':'MT'},
+        {'name':'Nebraska', 'abbrev':'NE'},         {'name':'Nevada', 'abbrev':'NV'},           {'name':'New Hampshire', 'abbrev':'NH'},
+        {'name':'New Jersey', 'abbrev':'NJ'},       {'name':'New Mexico', 'abbrev':'NM'},       {'name':'New York', 'abbrev':'NY'},
+        {'name':'North Carolina', 'abbrev':'NC'},   {'name':'North Dakota', 'abbrev':'ND'},     {'name':'Ohio', 'abbrev':'OH'},
+        {'name':'Oklahoma', 'abbrev':'OK'},         {'name':'Oregon', 'abbrev':'OR'},           {'name':'Pennsylvania', 'abbrev':'PA'},
+        {'name':'Rhode Island', 'abbrev':'RI'},     {'name':'South Carolina', 'abbrev':'SC'},   {'name':'South Dakota', 'abbrev':'SD'},
+        {'name':'Tennessee', 'abbrev':'TN'},        {'name':'Texas', 'abbrev':'TX'},            {'name':'Utah', 'abbrev':'UT'},
+        {'name':'Vermont', 'abbrev':'VT'},          {'name':'Virginia', 'abbrev':'VA'},         {'name':'Washington', 'abbrev':'WA'},
+        {'name':'West Virginia', 'abbrev':'WV'},    {'name':'Wisconsin', 'abbrev':'WI'},        {'name':'Wyoming', 'abbrev':'WY'}
+        );
+    var returnthis = false;
+    $.each(states, function(index, value){
+        if (to == 'name') {
+            if (value.abbrev == name){
+                returnthis = value.name;
+                return false;
+            }
+        } else if (to == 'abbrev') {
+            if (value.name.toUpperCase() == name){
+                returnthis = value.abbrev;
+                return false;
+            }
+        }
+    });
+    return returnthis;
+}     
+
 function setContacts(msg) {
     var contacts_list = msg.data;
     $('select#from-contacts').on('change', function() {
@@ -229,6 +268,7 @@ function setContacts(msg) {
     });
     $(".contacts-list").show();
     for (var j = 0; j < msg.data.length; j++) {
+        msg.data[j].address_state = convert_state(msg.data[j].address_state, "abbrev");
         $(".contacts-list").append("<option value=" + j + ">" + msg.data[j].name + " - " + msg.data[j].address_city + "<\/option>");
     }
 }
