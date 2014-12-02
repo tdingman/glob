@@ -67,14 +67,20 @@ input {
   display:table-cell
 }
 
+.contacts-list{
+  display: none;
+  }
 </style>
 
 <div class="sidebar">
 
   <form>
     <p><label for="api-key">API Key</label> <input class="width-100" id="api-key" style="width: 180px"></p>
-   <p style="white-space:nowrap; !important;"> <a href="/">Import Contacts</a></p>
+   <p style="white-space:nowrap; !important;" id="import-contacts"> <a>Import Contacts</a></p>
     <h3>From</h3>
+     <select class = "contacts-list">
+     <option value="default">----</option>
+     </select> 
 
     <p><label for="sender-name">Name</label> <input class="width-100" id="sender-name" style="width: 180px"><br></p>
 
@@ -85,8 +91,11 @@ input {
     <p><label for="sender-state">State</label> <input class="width-5" id="sender-state" style="width: 30px"></p>
 
     <p><label for="sender-zip">Zip</label> <input class="width-100" id="sender-zip" style="width: 60px"></p>
-
+    <p><br></p>
     <h3>To</h3>
+     <select class = "contacts-list">
+     <option value="default">----</option>
+     </select> 
 
     <p><label for="recipient-name">Name</label> <input class="width-100" id="recipient-name" style="width: 180px"></p>
 
@@ -108,14 +117,30 @@ input {
    * On document load, assign required handlers to each element,
    * and attempt to load any saved settings.
    */
+   
+  var contacts_list;
+  
   $(function() {
     $('#send-letter').click(sendLetter);
+    $('#import-contacts').click(getContacts);
     $('#estimate_btn').click(estimateCost);
   });
   /**
    * Collects the options specified in the add-on sidebar and sends them to
    * be saved as Properties on the server.
    */
+   
+  function getContacts(){
+      $("#import-contacts").html("Importing...");
+      var api_key = $("#api-key").val().trim();
+      google.script.run.withSuccessHandler(function(msg, element) {
+      setContacts(msg);
+    }).withFailureHandler(function(msg, element) {
+        showStatus(msg, $('#button-bar'));
+      }).withUserObject(this).getAddresses(api_key);
+}
+      
+  
   function sendLetter() {
       $("#status").remove();
       this.disabled = true;
@@ -158,7 +183,7 @@ input {
       }).withFailureHandler(function(msg, element) {
         showStatus(msg, $('#button-bar'));
         element.disabled = false;
-      }).withUserObject(this).saveSettings(settings);
+      }).withUserObject(this).saveSettingsAndSendLetter(settings);
     }
     /**
      * Inserts a div that contains an status message after a given element.
@@ -176,6 +201,15 @@ input {
       showStatus(msg, $('#button-bar'));
       element.disabled = false;
     }).withUserObject(this).getNumberOfPages();
+  }
+  
+  function setContacts(msg) {
+      contacts_list = msg;
+      $("#import-contacts").css({"visibility": "hidden"});
+      $(".contacts-list").show();
+      for (var j = 0; j < msg.data.length; j++) {
+          $(".contacts-list").append("<option value="+j+">" + msg.data[j].name + " - " + msg.data[j].address_city + "</option>");
+      }
   }
 
   function setCost(pages) {
