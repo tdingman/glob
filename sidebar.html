@@ -1,189 +1,194 @@
-<link rel="stylesheet" href="https://ssl.gstatic.com/docs/script/css/add-ons.css">
-<!-- The CSS package above applies Google styling to buttons and other elements. -->
+<!DOCTYPE html>
+<html>
+<head>
+    <link href="https://ssl.gstatic.com/docs/script/css/add-ons.css" rel="stylesheet">
+    <!-- The CSS package above applies Google styling to buttons and other elements. -->
 
-<style>
-
+    <style>
 h3 {
-  padding:10px 0;
-  display: table-cell;
+    padding:10px 0;
+    display:table-cell
 }
 
 .branding-below {
-  bottom:54px;
-  top:0;
+    bottom:54px;
+    top:0
 }
 
 .branding-text {
-  left:7px;
-  position:relative;
-  top:3px
+    left:7px;
+    position:relative;
+    top:3px
 }
 
 .logo {
-  vertical-align:middle
+    vertical-align:middle
 }
 
 .width-100 {
-  width:100%;
-  box-sizing:border-box;
-  -webkit-box-sizing:border-box;
-  -moz-box-sizing:border-box
+    width:100%;
+    box-sizing:border-box;
+    -webkit-box-sizing:border-box;
+    -moz-box-sizing:border-box
 }
 
 label {
-  font-weight:700;
-  padding-right: 10px;
+    font-weight:700;
+    padding-right:10px
 }
 
 #creator-options,#respondent-options {
-  background-color:#eee;
-  border-color:#eee;
-  border-width:5px;
-  border-style:solid;
-  display:none
+    background-color:#eee;
+    border-color:#eee;
+    border-width:5px;
+    border-style:solid;
+    display:none
 }
 
 #creator-email,#respondent-email,#button-bar {
-  margin-bottom:10px
+    margin-bottom:10px
 }
 
 #response-step {
-  display:inline
+    display:inline
 }
 
 form {
-  display:table
+    display:table
 }
 
 p {
-  display:table-row
+    display:table-row
 }
 
 label {
-  display:table-cell
+    display:table-cell
 }
 
 input {
-  display:table-cell
+    display:table-cell
 }
 
-.contacts-list{
-  display: none;
-  }
-</style>
+.contacts-list {
+    display:none
+}
+    </style>
 
-<div class="sidebar">
+    <title></title>
+</head>
 
-  <form>
-    <p><label for="api-key">API Key</label> <input class="width-100" id="api-key" style="width: 180px"></p>
-   <p style="white-space:nowrap; !important;" id="import-contacts"> <a>Import Contacts</a></p>
-    <h3>From</h3>
-     <select class = "contacts-list">
-     <option value="default">----</option>
-     </select> 
+<body>
+    <div class="sidebar">
+        <form>
+            <p><label for="api-key">API Key</label> <input class="width-100" id="api-key" style="width: 180px"></p>
 
-    <p><label for="sender-name">Name</label> <input class="width-100" id="sender-name" style="width: 180px"><br></p>
+            <p id="import-contacts" style="white-space:nowrap; !important;"><a>Import Contacts</a></p>
 
-    <p><label for="sender-address">Address</label> <input class="width-100" id="sender-address" style="width: 180px"><br></p>
+            <h3>From</h3><select class="contacts-list" id="from-contacts">
+                <option value="default">
+                    ----
+                </option>
+            </select>
 
-    <p><label for="sender-city">City</label> <input class="width-100" id="sender-city" style="width: 180px"><br></p>
+            <p><label for="sender-name">Name</label> <input class="width-100" id="sender-name" style="width: 180px"><br></p>
 
-    <p><label for="sender-state">State</label> <input class="width-5" id="sender-state" style="width: 30px"></p>
+            <p><label for="sender-address">Address</label> <input class="width-100" id="sender-address" style="width: 180px"><br></p>
 
-    <p><label for="sender-zip">Zip</label> <input class="width-100" id="sender-zip" style="width: 60px"></p>
-    <p><br></p>
-    <h3>To</h3>
-     <select class = "contacts-list">
-     <option value="default">----</option>
-     </select> 
+            <p><label for="sender-city">City</label> <input class="width-100" id="sender-city" style="width: 180px"><br></p>
 
-    <p><label for="recipient-name">Name</label> <input class="width-100" id="recipient-name" style="width: 180px"></p>
+            <p><label for="sender-state">State</label> <input class="width-100" id="sender-state" style="width: 180px"></p>
 
-    <p><label for="recipient-address">Address</label> <input class="width-100" id="recipient-address" style="width: 180px"></p>
+            <p><label for="sender-zip">Zip</label> <input class="width-100" id="sender-zip" style="width: 60px"></p>
 
-    <p><label for="recipient-city">City</label> <input class="width-100" id="recipient-city" style="width: 180px"></p>
- 
-    <p><label for="recipient-state">State</label> <input class="width-100" id="recipient-state" style="width: 30px"></p>
+            <p><br></p>
 
-    <p><label for="recipient-zip">Zip</label> <input class="width-100" id="recipient-zip" style="width: 60px"></p>
-      </form>
-    <h3>Estimated Price: <span id="estimate_btn"><a>Calculate</a></span></h3>
-    <button class="action" id="send-letter">Send</button>
+            <h3>To</h3><select class="contacts-list" id="to-contacts">
+                <option value="default">
+                    ----
+                </option>
+            </select>
 
+            <p><label for="recipient-name">Name</label> <input class="width-100" id="recipient-name" style="width: 180px"></p>
 
-  <div class="block" id="button-bar"></div>
-</div><script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script> <script>
-  /**
-   * On document load, assign required handlers to each element,
-   * and attempt to load any saved settings.
-   */
-   
-  var contacts_list;
-  
-  $(function() {
+            <p><label for="recipient-address">Address</label> <input class="width-100" id="recipient-address" style="width: 180px"></p>
+
+            <p><label for="recipient-city">City</label> <input class="width-100" id="recipient-city" style="width: 180px"></p>
+
+            <p><label for="recipient-state">State</label> <input class="width-100" id="recipient-state" style="width: 180px"></p>
+
+            <p><label for="recipient-zip">Zip</label> <input class="width-100" id="recipient-zip" style="width: 60px"></p>
+        </form>
+
+        <h3>Estimated Price: <span id="estimate_btn"><a>Calculate</a></span></h3><button class="action" id="send-letter">Send</button>
+
+        <div class="block" id="button-bar"></div>
+    </div><script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script> <script>
+/**
+ * On document load, assign required handlers to each element,
+ * and attempt to load any saved settings.
+ */
+$(function() {
     $('#send-letter').click(sendLetter);
     $('#import-contacts').click(getContacts);
     $('#estimate_btn').click(estimateCost);
-  });
-  /**
-   * Collects the options specified in the add-on sidebar and sends them to
-   * be saved as Properties on the server.
-   */
-   
-  function getContacts(){
-      $("#import-contacts").html("Importing...");
-      var api_key = $("#api-key").val().trim();
-      google.script.run.withSuccessHandler(function(msg, element) {
-      setContacts(msg);
+});
+/**
+ * Collects the options specified in the add-on sidebar and sends them to
+ * be saved as Properties on the server.
+ */
+function getContacts() {
+    $("#import-contacts").html("Importing...");
+    var api_key = $("#api-key").val().trim();
+    google.script.run.withSuccessHandler(function(msg, element) {
+        setContacts(msg);
     }).withFailureHandler(function(msg, element) {
         showStatus(msg, $('#button-bar'));
-      }).withUserObject(this).getAddresses(api_key);
+    }).withUserObject(this).getAddresses(api_key);
 }
-      
-  
-  function sendLetter() {
-      $("#status").remove();
-      this.disabled = true;
-      var api_key = $("#api-key").val().trim();
-      var from = {
-        "name": $("#sender-name").val(),
-        "address": $("#sender-address").val(),
-        "city": $("#sender-city").val(),
-        "state": $("#sender-state").val(),
-        "zip": $("#sender-zip").val()
-      };
-      var to = {
-        "name": $("#recipient-name").val(),
-        "address": $("#recipient-address").val(),
-        "city": $("#recipient-city").val(),
-        "state": $("#recipient-state").val(),
-        "zip": $("#recipient-zip").val()
-      };
-      if (!to.name || !to.address || !to.city || !to.state || !to.zip || !from.name || !from.address || !from.city || !from.state || !from.zip || !api_key) {
-        showStatus('All fields must be filled!', $('#button-bar'));
-        this.disabled = false;
-        return;
-      }
-      var settings = {
-        "apiKey": api_key,
-        "fromName": from.name,
-        "fromAddress": from.address,
-        "fromCity": from.city,
-        "fromState": from.state,
-        "fromZip": from.zip,
-        "toName": to.name,
-        "toAddress": to.address,
-        "toCity": to.city,
-        "toState": to.state,
-        "toZip": to.zip
-      }
-      google.script.run.withSuccessHandler(function(msg, element) {
-        showStatus('Letter successfully sent!', $('#button-bar'));
-        element.disabled = false;
-      }).withFailureHandler(function(msg, element) {
-        showStatus(msg, $('#button-bar'));
-        element.disabled = false;
-      }).withUserObject(this).saveSettingsAndSendLetter(settings);
+
+function sendLetter() {
+        $("#status").remove();
+        this.disabled = true;
+        var api_key = $("#api-key").val().trim();
+        var from = {
+            "name": $("#sender-name").val(),
+            "address": $("#sender-address").val(),
+            "city": $("#sender-city").val(),
+            "state": $("#sender-state").val(),
+            "zip": $("#sender-zip").val()
+        };
+        var to = {
+            "name": $("#recipient-name").val(),
+            "address": $("#recipient-address").val(),
+            "city": $("#recipient-city").val(),
+            "state": $("#recipient-state").val(),
+            "zip": $("#recipient-zip").val()
+        };
+        if (!to.name || !to.address || !to.city || !to.state || !to.zip || !from.name || !from.address || !from.city || !from.state || !from.zip || !api_key) {
+            showStatus('All fields must be filled!', $('#button-bar'));
+            this.disabled = false;
+            return;
+        }
+        var settings = {
+            "apiKey": api_key,
+            "fromName": from.name,
+            "fromAddress": from.address,
+            "fromCity": from.city,
+            "fromState": from.state,
+            "fromZip": from.zip,
+            "toName": to.name,
+            "toAddress": to.address,
+            "toCity": to.city,
+            "toState": to.state,
+            "toZip": to.zip
+        }
+        google.script.run.withSuccessHandler(function(msg, element) {
+            showStatus('Letter successfully sent!', $('#button-bar'));
+            element.disabled = false;
+        }).withFailureHandler(function(msg, element) {
+            showStatus(msg, $('#button-bar'));
+            element.disabled = false;
+        }).withUserObject(this).saveSettingsAndSendLetter(settings);
     }
     /**
      * Inserts a div that contains an status message after a given element.
@@ -192,36 +197,52 @@ input {
      * @param {Object} element The element after which to display the Status.
      */
 
-  function estimateCost() {
+function estimateCost() {
     $("#estimate_btn").html("Calculating...");
     google.script.run.withSuccessHandler(function(msg, element) {
-      setCost(msg);
-      element.disabled = false;
+        setCost(msg);
+        element.disabled = false;
     }).withFailureHandler(function(msg, element) {
-      showStatus(msg, $('#button-bar'));
-      element.disabled = false;
+        showStatus(msg, $('#button-bar'));
+        element.disabled = false;
     }).withUserObject(this).getNumberOfPages();
-  }
-  
-  function setContacts(msg) {
-      contacts_list = msg;
-      $("#import-contacts").css({"visibility": "hidden"});
-      $(".contacts-list").show();
-      for (var j = 0; j < msg.data.length; j++) {
-          $(".contacts-list").append("<option value="+j+">" + msg.data[j].name + " - " + msg.data[j].address_city + "</option>");
-      }
-  }
+}
 
-  function setCost(pages) {
+function setContacts(msg) {
+    var contacts_list = msg.data;
+    $('select#from-contacts').on('change', function() {
+        $('#sender-name').val(contacts_list[$(this).val()].name);
+        $('#sender-address').val(contacts_list[$(this).val()].address_line1);
+        $('#sender-city').val(contacts_list[$(this).val()].address_city);
+        $('#sender-state').val(contacts_list[$(this).val()].address_state);
+        $('#sender-zip').val(contacts_list[$(this).val()].address_zip);
+    });
+    $('select#to-contacts').on('change', function() {
+        $('#recipient-name').val(contacts_list[$(this).val()].name);
+        $('#recipient-address').val(contacts_list[$(this).val()].address_line1);
+        $('#recipient-city').val(contacts_list[$(this).val()].address_city);
+        $('#recipient-state').val(contacts_list[$(this).val()].address_state);
+        $('#recipient-zip').val(contacts_list[$(this).val()].address_zip);
+    });
+    $("#import-contacts").css({
+        "visibility": "hidden"
+    });
+    $(".contacts-list").show();
+    for (var j = 0; j < msg.data.length; j++) {
+        $(".contacts-list").append("<option value=" + j + ">" + msg.data[j].name + " - " + msg.data[j].address_city + "<\/option>");
+    }
+}
+
+function setCost(pages) {
     //Linear regression estimate of pages versus job price
     var estimated_price = 0.20859580519019 + 0.40689477426235 * pages;
     $("#estimate_btn").html("$" + estimated_price.toFixed(2));
-  }
+}
 
-  function showStatus(msg, element) {
+function showStatus(msg, element) {
     var div = $('<div>').attr('id', 'status').attr('class', 'error').text(msg);
     $(element).after(div);
-  }
-</script>
-
-
+}
+    </script>
+</body>
+</html>

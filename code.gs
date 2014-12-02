@@ -131,7 +131,6 @@ function saveSettingsAndSendLetter(settings) {
     sendLetterRequest();
 }
 
-
 function sendLetterRequest() {
     var settings = PropertiesService.getDocumentProperties();
     var lob_api_key = settings.getProperty('apiKey') + ":";
@@ -203,8 +202,7 @@ function sendLetterRequest() {
 }
 
 function getAddresses(api_key) {
-  var lob_api_key = api_key + ":";
-        var auth = Base64.encode(lob_api_key);
+        var auth = Base64.encode(api_key + ":");
         var headers = {
             'Authorization': 'Basic ' + auth
         }
@@ -215,7 +213,6 @@ function getAddresses(api_key) {
         };
         return JSON.parse(UrlFetchApp.fetch(url, options));
     }
-    
     
 //adapted from http://code.google.com/p/google-apps-script-issues/issues/detail?id=1656
 function getNumberOfPages() {
