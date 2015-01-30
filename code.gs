@@ -177,7 +177,7 @@ function sendLetterRequest() {
     var url = "https://api.lob.com/v1/objects";
     var object1 = {
         file: pdf,
-        setting_id: 100
+        setting: "100"
     }
     options = {
         "method": "post",
