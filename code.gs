@@ -188,7 +188,11 @@ function sendLetterRequest() {
     //
     //Finally, create the job object:
     var url = "https://api.lob.com/v1/jobs";
+    var name = DocumentApp.getActiveDocument().getName() + 
+              " to " + to_address_obj.name +
+              " at " + to_address_obj.address_line1;
     var letter = {
+        name: name,
         to: to_id,
         from: from_id,
         object1: object_id
