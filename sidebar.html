@@ -9,34 +9,28 @@ h3 {
     padding:10px 0;
     display:table-cell
 }
-
 .branding-below {
     bottom:54px;
     top:0
 }
-
 .branding-text {
     left:7px;
     position:relative;
     top:3px
 }
-
 .logo {
     vertical-align:middle
 }
-
 .width-100 {
     width:100%;
     box-sizing:border-box;
     -webkit-box-sizing:border-box;
     -moz-box-sizing:border-box
 }
-
 label {
     font-weight:700;
     padding-right:10px
 }
-
 #creator-options,#respondent-options {
     background-color:#eee;
     border-color:#eee;
@@ -44,31 +38,24 @@ label {
     border-style:solid;
     display:none
 }
-
 #creator-email,#respondent-email,#button-bar {
     margin-bottom:10px
 }
-
 #response-step {
     display:inline
 }
-
 form {
     display:table
 }
-
 p {
     display:table-row
 }
-
 label {
     display:table-cell
 }
-
 input {
     display:table-cell
 }
-
 .contacts-list {
     display:none
 }
@@ -80,7 +67,14 @@ input {
 <body>
     <div class="sidebar">
         <form>
-            <p><label for="api-key">API Key</label> <input class="width-100" id="api-key" style="width: 180px"></p>
+            <p>
+              <label for="api-key-choice">API Key</label>
+              <select id="api-key-choice">
+                <option value="live">Live</option>
+                <option value="test">Test</option>
+              </select>            
+            </p>
+            
 
             <p id="import-contacts" style="white-space:nowrap; !important;"><a>Import Contacts</a></p>
 
@@ -122,167 +116,180 @@ input {
         <h3>Estimated Price: <span id="estimate_btn"><a>Calculate</a></span></h3><button class="action" id="send-letter">Send</button>
 
         <div class="block" id="button-bar"></div>
-    </div><script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script> <script>
-/**
- * On document load, assign required handlers to each element,
- * and attempt to load any saved settings.
- */
-$(function() {
-    $('#send-letter').click(sendLetter);
-    $('#import-contacts').click(getContacts);
-    $('#estimate_btn').click(estimateCost);
-});
-/**
- * Collects the options specified in the add-on sidebar and sends them to
- * be saved as Properties on the server.
- */
-function getContacts() {
-    $("#import-contacts").html("Importing...");
-    var api_key = $("#api-key").val().trim();
-    google.script.run.withSuccessHandler(function(msg, element) {
-        setContacts(msg);
-    }).withFailureHandler(function(msg, element) {
-        showStatus(msg, $('#button-bar'));
-    }).withUserObject(this).getAddresses(api_key);
-}
-
-function sendLetter() {
-        $("#status").remove();
-        this.disabled = true;
-        var api_key = $("#api-key").val().trim();
-        var from = {
-            "name": $("#sender-name").val(),
-            "address": $("#sender-address").val(),
-            "city": $("#sender-city").val(),
-            "state": $("#sender-state").val(),
-            "zip": $("#sender-zip").val()
-        };
-        var to = {
-            "name": $("#recipient-name").val(),
-            "address": $("#recipient-address").val(),
-            "city": $("#recipient-city").val(),
-            "state": $("#recipient-state").val(),
-            "zip": $("#recipient-zip").val()
-        };
-        if (!to.name || !to.address || !to.city || !to.state || !to.zip || !from.name || !from.address || !from.city || !from.state || !from.zip || !api_key) {
-            showStatus('All fields must be filled!', $('#button-bar'));
-            this.disabled = false;
-            return;
-        }
-        var settings = {
-            "apiKey": api_key,
-            "fromName": from.name,
-            "fromAddress": from.address,
-            "fromCity": from.city,
-            "fromState": from.state,
-            "fromZip": from.zip,
-            "toName": to.name,
-            "toAddress": to.address,
-            "toCity": to.city,
-            "toState": to.state,
-            "toZip": to.zip
-        }
+    </div>
+    
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    
+    <script>
+    
+    var LIVE_API_KEY = "";
+    var TEST_API_KEY = "";
+    
+    /**
+     * On document load, assign required handlers to each element,
+     * and attempt to load any saved settings.
+     */
+    $(function() {
+        $('#send-letter').click(sendLetter);
+        $('#import-contacts').click(getContacts);
+        $('#estimate_btn').click(estimateCost);
+    });
+    
+    function choiceToKey(choice) {
+      if (choice === 'live') {
+        return LIVE_API_KEY;
+      }
+      if (choice === 'test') {
+        return TEST_API_KEY;
+      }
+    }
+    
+    /**
+     * Collects the options specified in the add-on sidebar and sends them to
+     * be saved as Properties on the server.
+     */
+    function getContacts() {
+        $("#import-contacts").html("Importing...");
+        var api_key_choice = $("#api-key-choice").val();
+        var api_key = choiceToKey(api_key_choice);
         google.script.run.withSuccessHandler(function(msg, element) {
-            showStatus('Letter successfully sent!', $('#button-bar'));
+            setContacts(msg);
+        }).withFailureHandler(function(msg, element) {
+            showStatus(msg, $('#button-bar'));
+        }).withUserObject(this).getAddresses(api_key);
+    }
+    function sendLetter() {
+            $("#status").remove();
+            this.disabled = true;
+            var api_key_choice = $("#api-key-choice").val();
+            var api_key = choiceToKey(api_key_choice);
+            var from = {
+                "name": $("#sender-name").val(),
+                "address": $("#sender-address").val(),
+                "city": $("#sender-city").val(),
+                "state": $("#sender-state").val(),
+                "zip": $("#sender-zip").val()
+            };
+            var to = {
+                "name": $("#recipient-name").val(),
+                "address": $("#recipient-address").val(),
+                "city": $("#recipient-city").val(),
+                "state": $("#recipient-state").val(),
+                "zip": $("#recipient-zip").val()
+            };
+            if (!to.name || !to.address || !to.city || !to.state || !to.zip || !from.name || !from.address || !from.city || !from.state || !from.zip || !api_key) {
+                showStatus('All fields must be filled!', $('#button-bar'));
+                this.disabled = false;
+                return;
+            }
+            var settings = {
+                "apiKey": api_key,
+                "fromName": from.name,
+                "fromAddress": from.address,
+                "fromCity": from.city,
+                "fromState": from.state,
+                "fromZip": from.zip,
+                "toName": to.name,
+                "toAddress": to.address,
+                "toCity": to.city,
+                "toState": to.state,
+                "toZip": to.zip
+            }
+            google.script.run.withSuccessHandler(function(msg, element) {
+                showStatus('Letter successfully sent!', $('#button-bar'));
+                element.disabled = false;
+            }).withFailureHandler(function(msg, element) {
+                showStatus(msg, $('#button-bar'));
+                element.disabled = false;
+            }).withUserObject(this).saveSettingsAndSendLetter(settings);
+        }
+        /**
+         * Inserts a div that contains an status message after a given element.
+         *
+         * @param {String} msg The status message to display.
+         * @param {Object} element The element after which to display the Status.
+         */
+    function estimateCost() {
+        $("#estimate_btn").html("Calculating...");
+        google.script.run.withSuccessHandler(function(msg, element) {
+            setCost(msg);
             element.disabled = false;
         }).withFailureHandler(function(msg, element) {
             showStatus(msg, $('#button-bar'));
             element.disabled = false;
-        }).withUserObject(this).saveSettingsAndSendLetter(settings);
+        }).withUserObject(this).getNumberOfPages();
     }
-    /**
-     * Inserts a div that contains an status message after a given element.
-     *
-     * @param {String} msg The status message to display.
-     * @param {Object} element The element after which to display the Status.
-     */
-
-function estimateCost() {
-    $("#estimate_btn").html("Calculating...");
-    google.script.run.withSuccessHandler(function(msg, element) {
-        setCost(msg);
-        element.disabled = false;
-    }).withFailureHandler(function(msg, element) {
-        showStatus(msg, $('#button-bar'));
-        element.disabled = false;
-    }).withUserObject(this).getNumberOfPages();
-}
-
-
-//helper function to assist in converting stored state names to abbreviations
-function convert_state(name, to) {
-    var name = name.toUpperCase();
-    var states = new Array(                         {'name':'Alabama', 'abbrev':'AL'},          {'name':'Alaska', 'abbrev':'AK'},
-        {'name':'Arizona', 'abbrev':'AZ'},          {'name':'Arkansas', 'abbrev':'AR'},         {'name':'California', 'abbrev':'CA'},
-        {'name':'Colorado', 'abbrev':'CO'},         {'name':'Connecticut', 'abbrev':'CT'},      {'name':'Delaware', 'abbrev':'DE'},
-        {'name':'Florida', 'abbrev':'FL'},          {'name':'Georgia', 'abbrev':'GA'},          {'name':'Hawaii', 'abbrev':'HI'},
-        {'name':'Idaho', 'abbrev':'ID'},            {'name':'Illinois', 'abbrev':'IL'},         {'name':'Indiana', 'abbrev':'IN'},
-        {'name':'Iowa', 'abbrev':'IA'},             {'name':'Kansas', 'abbrev':'KS'},           {'name':'Kentucky', 'abbrev':'KY'},
-        {'name':'Louisiana', 'abbrev':'LA'},        {'name':'Maine', 'abbrev':'ME'},            {'name':'Maryland', 'abbrev':'MD'},
-        {'name':'Massachusetts', 'abbrev':'MA'},    {'name':'Michigan', 'abbrev':'MI'},         {'name':'Minnesota', 'abbrev':'MN'},
-        {'name':'Mississippi', 'abbrev':'MS'},      {'name':'Missouri', 'abbrev':'MO'},         {'name':'Montana', 'abbrev':'MT'},
-        {'name':'Nebraska', 'abbrev':'NE'},         {'name':'Nevada', 'abbrev':'NV'},           {'name':'New Hampshire', 'abbrev':'NH'},
-        {'name':'New Jersey', 'abbrev':'NJ'},       {'name':'New Mexico', 'abbrev':'NM'},       {'name':'New York', 'abbrev':'NY'},
-        {'name':'North Carolina', 'abbrev':'NC'},   {'name':'North Dakota', 'abbrev':'ND'},     {'name':'Ohio', 'abbrev':'OH'},
-        {'name':'Oklahoma', 'abbrev':'OK'},         {'name':'Oregon', 'abbrev':'OR'},           {'name':'Pennsylvania', 'abbrev':'PA'},
-        {'name':'Rhode Island', 'abbrev':'RI'},     {'name':'South Carolina', 'abbrev':'SC'},   {'name':'South Dakota', 'abbrev':'SD'},
-        {'name':'Tennessee', 'abbrev':'TN'},        {'name':'Texas', 'abbrev':'TX'},            {'name':'Utah', 'abbrev':'UT'},
-        {'name':'Vermont', 'abbrev':'VT'},          {'name':'Virginia', 'abbrev':'VA'},         {'name':'Washington', 'abbrev':'WA'},
-        {'name':'West Virginia', 'abbrev':'WV'},    {'name':'Wisconsin', 'abbrev':'WI'},        {'name':'Wyoming', 'abbrev':'WY'}
-        );
-    var returnthis = false;
-    $.each(states, function(index, value){
-        if (to == 'name') {
-            if (value.abbrev == name){
-                returnthis = value.name;
-                return false;
+    //helper function to assist in converting stored state names to abbreviations
+    function convert_state(name, to) {
+        var name = name.toUpperCase();
+        var states = new Array(                         {'name':'Alabama', 'abbrev':'AL'},          {'name':'Alaska', 'abbrev':'AK'},
+            {'name':'Arizona', 'abbrev':'AZ'},          {'name':'Arkansas', 'abbrev':'AR'},         {'name':'California', 'abbrev':'CA'},
+            {'name':'Colorado', 'abbrev':'CO'},         {'name':'Connecticut', 'abbrev':'CT'},      {'name':'Delaware', 'abbrev':'DE'},
+            {'name':'Florida', 'abbrev':'FL'},          {'name':'Georgia', 'abbrev':'GA'},          {'name':'Hawaii', 'abbrev':'HI'},
+            {'name':'Idaho', 'abbrev':'ID'},            {'name':'Illinois', 'abbrev':'IL'},         {'name':'Indiana', 'abbrev':'IN'},
+            {'name':'Iowa', 'abbrev':'IA'},             {'name':'Kansas', 'abbrev':'KS'},           {'name':'Kentucky', 'abbrev':'KY'},
+            {'name':'Louisiana', 'abbrev':'LA'},        {'name':'Maine', 'abbrev':'ME'},            {'name':'Maryland', 'abbrev':'MD'},
+            {'name':'Massachusetts', 'abbrev':'MA'},    {'name':'Michigan', 'abbrev':'MI'},         {'name':'Minnesota', 'abbrev':'MN'},
+            {'name':'Mississippi', 'abbrev':'MS'},      {'name':'Missouri', 'abbrev':'MO'},         {'name':'Montana', 'abbrev':'MT'},
+            {'name':'Nebraska', 'abbrev':'NE'},         {'name':'Nevada', 'abbrev':'NV'},           {'name':'New Hampshire', 'abbrev':'NH'},
+            {'name':'New Jersey', 'abbrev':'NJ'},       {'name':'New Mexico', 'abbrev':'NM'},       {'name':'New York', 'abbrev':'NY'},
+            {'name':'North Carolina', 'abbrev':'NC'},   {'name':'North Dakota', 'abbrev':'ND'},     {'name':'Ohio', 'abbrev':'OH'},
+            {'name':'Oklahoma', 'abbrev':'OK'},         {'name':'Oregon', 'abbrev':'OR'},           {'name':'Pennsylvania', 'abbrev':'PA'},
+            {'name':'Rhode Island', 'abbrev':'RI'},     {'name':'South Carolina', 'abbrev':'SC'},   {'name':'South Dakota', 'abbrev':'SD'},
+            {'name':'Tennessee', 'abbrev':'TN'},        {'name':'Texas', 'abbrev':'TX'},            {'name':'Utah', 'abbrev':'UT'},
+            {'name':'Vermont', 'abbrev':'VT'},          {'name':'Virginia', 'abbrev':'VA'},         {'name':'Washington', 'abbrev':'WA'},
+            {'name':'West Virginia', 'abbrev':'WV'},    {'name':'Wisconsin', 'abbrev':'WI'},        {'name':'Wyoming', 'abbrev':'WY'}
+            );
+        var returnthis = false;
+        $.each(states, function(index, value){
+            if (to == 'name') {
+                if (value.abbrev == name){
+                    returnthis = value.name;
+                    return false;
+                }
+            } else if (to == 'abbrev') {
+                if (value.name.toUpperCase() == name){
+                    returnthis = value.abbrev;
+                    return false;
+                }
             }
-        } else if (to == 'abbrev') {
-            if (value.name.toUpperCase() == name){
-                returnthis = value.abbrev;
-                return false;
-            }
+        });
+        return returnthis;
+    }     
+    function setContacts(msg) {
+        var contacts_list = msg.data;
+        $('select#from-contacts').on('change', function() {
+            $('#sender-name').val(contacts_list[$(this).val()].name);
+            $('#sender-address').val(contacts_list[$(this).val()].address_line1);
+            $('#sender-city').val(contacts_list[$(this).val()].address_city);
+            $('#sender-state').val(contacts_list[$(this).val()].address_state);
+            $('#sender-zip').val(contacts_list[$(this).val()].address_zip);
+        });
+        $('select#to-contacts').on('change', function() {
+            $('#recipient-name').val(contacts_list[$(this).val()].name);
+            $('#recipient-address').val(contacts_list[$(this).val()].address_line1);
+            $('#recipient-city').val(contacts_list[$(this).val()].address_city);
+            $('#recipient-state').val(contacts_list[$(this).val()].address_state);
+            $('#recipient-zip').val(contacts_list[$(this).val()].address_zip);
+        });
+        $("#import-contacts").css({
+            "visibility": "hidden"
+        });
+        $(".contacts-list").show();
+        for (var j = 0; j < msg.data.length; j++) {
+            msg.data[j].address_state = convert_state(msg.data[j].address_state, "abbrev");
+            $(".contacts-list").append("<option value=" + j + ">" + msg.data[j].name + " - " + msg.data[j].address_city + "<\/option>");
         }
-    });
-    return returnthis;
-}     
-
-function setContacts(msg) {
-    var contacts_list = msg.data;
-    $('select#from-contacts').on('change', function() {
-        $('#sender-name').val(contacts_list[$(this).val()].name);
-        $('#sender-address').val(contacts_list[$(this).val()].address_line1);
-        $('#sender-city').val(contacts_list[$(this).val()].address_city);
-        $('#sender-state').val(contacts_list[$(this).val()].address_state);
-        $('#sender-zip').val(contacts_list[$(this).val()].address_zip);
-    });
-    $('select#to-contacts').on('change', function() {
-        $('#recipient-name').val(contacts_list[$(this).val()].name);
-        $('#recipient-address').val(contacts_list[$(this).val()].address_line1);
-        $('#recipient-city').val(contacts_list[$(this).val()].address_city);
-        $('#recipient-state').val(contacts_list[$(this).val()].address_state);
-        $('#recipient-zip').val(contacts_list[$(this).val()].address_zip);
-    });
-    $("#import-contacts").css({
-        "visibility": "hidden"
-    });
-    $(".contacts-list").show();
-    for (var j = 0; j < msg.data.length; j++) {
-        msg.data[j].address_state = convert_state(msg.data[j].address_state, "abbrev");
-        $(".contacts-list").append("<option value=" + j + ">" + msg.data[j].name + " - " + msg.data[j].address_city + "<\/option>");
     }
-}
-
-function setCost(pages) {
-    //Linear regression estimate of pages versus job price
-    var estimated_price = 0.20859580519019 + 0.40689477426235 * pages;
-    $("#estimate_btn").html("$" + estimated_price.toFixed(2));
-}
-
-function showStatus(msg, element) {
-    var div = $('<div>').attr('id', 'status').attr('class', 'error').text(msg);
-    $(element).after(div);
-}
+    function setCost(pages) {
+        //Linear regression estimate of pages versus job price
+        var estimated_price = 0.20859580519019 + 0.40689477426235 * pages;
+        $("#estimate_btn").html("$" + estimated_price.toFixed(2));
+    }
+    function showStatus(msg, element) {
+        var div = $('<div>').attr('id', 'status').attr('class', 'error').text(msg);
+        $(element).after(div);
+    }
     </script>
 </body>
 </html>
