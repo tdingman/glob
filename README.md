@@ -17,8 +17,9 @@ For more information on publishing a Docs add-on, see <a href="https://developer
 6. Delete the initial contents of the file and replace them with the included `sidebar.html`.
 <img src="https://raw.githubusercontent.com/mikesteele/glob/master/screenshots/2.png">
 <img src="https://raw.githubusercontent.com/mikesteele/glob/master/screenshots/3.png">
-7. Click back to editing `code.gs` and on the top menu bar, select `onOpen` and then hit `Run`.
-8. Navigate back to your doc and you're ready to Lob your doc to anyone!
+7. Fill in your `LIVE_API_KEY` and `TEST_API_KEY` in `sidebar.html`
+8. Click back to editing `code.gs` and on the top menu bar, select `onOpen` and then hit `Run`.
+9. Navigate back to your doc and you're ready to Lob your doc to anyone!
 
 ## Known Issues
 1. Duplicate addresses
