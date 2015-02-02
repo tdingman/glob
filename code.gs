@@ -133,8 +133,8 @@ function saveSettingsAndSendLetter(settings) {
 
 function sendLetterRequest() {
     var settings = PropertiesService.getDocumentProperties();
-    var lob_api_key = settings.getProperty('apiKey') + ":";
-    var auth = Base64.encode(lob_api_key);
+    var api_key = settings.getProperty('apiKey') + ":";
+    var auth = Base64.encode(api_key);
     var headers = {
             'Authorization': 'Basic ' + auth
         }
