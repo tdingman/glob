@@ -159,6 +159,7 @@ select {
       google.script.run
         .withSuccessHandler(function(ret) {
           showStatus('Contact added!', $('#button-bar'));
+          getContacts();
         })
         .withFailureHandler(function(ret) {
           showStatus(ret, $('#button-bar'));
