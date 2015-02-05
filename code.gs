@@ -9,27 +9,29 @@
  */
 var ADDON_TITLE = 'Lob';
 var NOTICE = "Test Lob add-on for Google Docs";
-/**
- * Adds a custom menu to the active form to show the add-on sidebar.
- *
- * @param {object} e The event parameter for a simple onOpen trigger. To
- * determine which authorization mode (ScriptApp.AuthMode) the trigger is
- * running in, inspect e.authMode.
- */
+ 
+var LIVE_API_KEY = "live_ffbd05bc6baa4393331a061e01a77a8183b";
+var TEST_API_KEY = "test_eaa10801c940ee8610f2dbe13130033de91";
+
+var ADDRESS_URL = 'https://api.lob.com/v1/addresses';
+var OBJECT_URL = 'https://api.lob.com/v1/objects';
+var JOB_URL = 'https://api.lob.com/v1/jobs';
+
+function getAPIKey(choice) {
+  if (choice === 'live') {
+    return LIVE_API_KEY;
+  }
+  if (choice === 'test') {
+    return TEST_API_KEY;
+  }
+}
+
 function onOpen(e) {
-        var ui = DocumentApp.getUi();
-        ui.createMenu('Lob').addItem('Send Doc as Letter', 'showSidebar').addToUi();
-    }
-    /**
-     * Runs when the add-on is installed.
-     *
-     * @param {object} e The event parameter for a simple onInstall trigger. To
-     * determine which authorization mode (ScriptApp.AuthMode) the trigger is
-     * running in, inspect e.authMode. (In practice, onInstall triggers always
-     * run in AuthMode.FULL, but onOpen triggers may be AuthMode.LIMITED or
-     * AuthMode.NONE).
-     */
-    //Helper to encode string in Base64
+  var ui = DocumentApp.getUi();
+  ui.createMenu('Lob').addItem('Send Doc as Letter', 'showSidebar').addToUi();
+}
+     
+//Helper to encode string in Base64
 var Base64 = {
     _keyStr: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=",
     encode: function(e) {
@@ -122,101 +124,80 @@ var Base64 = {
 }
 
 function onInstall(e) {
-        onOpen(e);
-    }
-    //Saves settings for Lob Job
-
-function saveSettingsAndSendLetter(settings) {
-    PropertiesService.getDocumentProperties().setProperties(settings);
-    sendLetterRequest();
+  onOpen(e);
 }
 
-function sendLetterRequest() {
-    var settings = PropertiesService.getDocumentProperties();
-    var api_key = settings.getProperty('apiKey') + ":";
-    var auth = Base64.encode(api_key);
-    var headers = {
-            'Authorization': 'Basic ' + auth
-        }
-        //Creating the to address object
-    var to_address_obj = {
-        name: settings.getProperty('toName'),
-        address_line1: settings.getProperty('toAddress'),
-        address_city: settings.getProperty('toCity'),
-        address_state: settings.getProperty('toState'),
-        address_zip: settings.getProperty('toZip'),
-        address_country: 'US'
-    }
-    var options = {
-        "method": "post",
-        "payload": to_address_obj,
-        "headers": headers
-    };
-    var url = "https://api.lob.com/v1/addresses";
-    var to_id = JSON.parse(UrlFetchApp.fetch(url, options).getContentText()).id;
-    //
-    //Creating the from address object
-    var from_address_obj = {
-        name: settings.getProperty('fromName'),
-        address_line1: settings.getProperty('fromAddress'),
-        address_city: settings.getProperty('fromCity'),
-        address_state: settings.getProperty('fromState'),
-        address_zip: settings.getProperty('fromZip'),
-        address_country: 'US'
-    }
-    options = {
-        "method": "post",
-        "payload": from_address_obj,
-        "headers": headers
-    };
-    var from_id = JSON.parse(UrlFetchApp.fetch(url, options).getContentText()).id;
-    //
-    //PDF the Doc and create an Object
-    var this_id = DocumentApp.getActiveDocument().getId();
-    var pdf = DocsList.getFileById(this_id).getAs('application/pdf');
-    var url = "https://api.lob.com/v1/objects";
-    var object1 = {
-        file: pdf,
-        setting: "100"
-    }
-    options = {
-        "method": "post",
-        "payload": object1,
-        "headers": headers
-    };
-    var object_id = JSON.parse(UrlFetchApp.fetch(url, options).getContentText()).id;
-    //
-    //Finally, create the job object:
-    var url = "https://api.lob.com/v1/jobs";
-    var name = DocumentApp.getActiveDocument().getName() + 
-              " to " + to_address_obj.name +
-              " at " + to_address_obj.address_line1;
+
+function sendToLob(obj, api_key_choice) {
+  var api_key = getAPIKey(api_key_choice);
+  var auth = Base64.encode(api_key + ":");
+  var headers = {
+    'Authorization': 'Basic ' + auth
+  };
+  var options = {
+    'method': 'post',
+    'payload': obj,
+    'headers': headers
+  };
+  var url;
+  if (obj.address_country) {
+    url = ADDRESS_URL;
+  }
+  else if (obj.file) {
+    url = OBJECT_URL;
+  }
+  else if (obj.object1) {
+    url = JOB_URL;
+  }
+  else {
+    return 'Error: object not recognized';
+  }
+  var ret = UrlFetchApp.fetch(url, options).getContentText();
+  var ID = JSON.parse(ret).id;
+  return ID;
+}
+
+function addContact(contact, api_key_choice) {
+  return sendToLob(contact, api_key_choice);
+}
+
+function addDoc(api_key_choice) {
+  var this_id = DocumentApp.getActiveDocument().getId();
+  var pdf = DocsList.getFileById(this_id).getAs('application/pdf');
+  var object1 = {
+    file: pdf,
+    setting: "100"
+  };
+  return sendToLob(object1, api_key_choice);
+}
+  
+function addJob(to, from, api_key_choice) {
+    var name = DocumentApp.getActiveDocument().getName() + " to " + to.address;
+    var to_id = to.id;
+    var from_id = from.id;    
+    var object_id = addDoc(api_key_choice);
     var letter = {
         name: name,
         to: to_id,
         from: from_id,
         object1: object_id
     }
-    options = {
-        "method": "post",
-        "payload": letter,
-        "headers": headers
-    };
-    UrlFetchApp.fetch(url, options);
+    return sendToLob(letter, api_key_choice);
 }
 
-function getAddresses(api_key) {
-        var auth = Base64.encode(api_key + ":");
-        var headers = {
-            'Authorization': 'Basic ' + auth
-        }
-        var url = "https://api.lob.com/v1/addresses/";
-        options = {
-            "method": "get",
-            "headers": headers
-        };
-        return JSON.parse(UrlFetchApp.fetch(url, options));
-    }
+function getAddresses(api_key_choice) {
+  var api_key = getAPIKey(api_key_choice);
+  var auth = Base64.encode(api_key + ":");
+  var headers = {
+   'Authorization': 'Basic ' + auth
+  }
+  var url = ADDRESS_URL;
+  var options = {
+    "method": "get",
+    "headers": headers
+  };
+  return JSON.parse(UrlFetchApp.fetch(url, options));
+}
     
 //adapted from http://code.google.com/p/google-apps-script-issues/issues/detail?id=1656
 function getNumberOfPages() {
