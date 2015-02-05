@@ -10,8 +10,8 @@
 var ADDON_TITLE = 'Lob';
 var NOTICE = "Test Lob add-on for Google Docs";
  
-var LIVE_API_KEY = "live_ffbd05bc6baa4393331a061e01a77a8183b";
-var TEST_API_KEY = "test_eaa10801c940ee8610f2dbe13130033de91";
+var LIVE_API_KEY = "";
+var TEST_API_KEY = "";
 
 var ADDRESS_URL = 'https://api.lob.com/v1/addresses';
 var OBJECT_URL = 'https://api.lob.com/v1/objects';
